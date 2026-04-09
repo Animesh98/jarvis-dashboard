@@ -142,8 +142,19 @@ Copy `.env.example` to `.env` and set your values:
 | `MEDIA_PATH` | No | Media root path (default: `/data/media`) |
 | `JELLYFIN_BASE` | No | Jellyfin URL (default: `http://localhost:8096`) |
 | `WEATHER_CITY` | No | City name for weather widget |
+| `API_KEY` | No | Protects backend from non-localhost callers (see [Authentication](#authentication)) |
 
 **Requirements (bare metal):** Python 3.10+, Node.js 18+, Docker engine, Jellyfin, and Transmission or qBittorrent accessible on the local network.
+
+### Authentication
+
+The backend ships with an opt-in API-key middleware (`backend/app/middleware.py`). When `API_KEY` is set in `.env`, every request from a non-localhost client must send a matching `X-API-Key` header — useful when exposing the backend over Tailscale or a tunnel. Requests from `127.0.0.1`/`::1` (the Next.js proxy on the same host) are always trusted, so the local dev experience is unchanged. Leave `API_KEY` empty to keep the previous open-access behavior.
+
+Generate a key with:
+
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
 
 ---
 

@@ -608,7 +608,7 @@ export default function TasksPage() {
     // Get the drop target task (if dropping on a specific task)
     let dropTargetId: string | null = null
     const target = e.target as HTMLElement
-    const taskEl = target.closest(`.${styles.task}`)
+    const taskEl = target.closest('[data-task-id]')
     if (taskEl) {
       dropTargetId = taskEl.getAttribute('data-task-id')
     }
@@ -620,7 +620,12 @@ export default function TasksPage() {
     let insertIdx = colTasks.length // default: end
     if (dropTargetId && dropTargetId !== taskId) {
       const targetIdx = colTasks.findIndex(t => t.id === dropTargetId)
-      if (targetIdx !== -1) insertIdx = targetIdx
+      if (targetIdx !== -1) {
+        // Use cursor Y vs target card midpoint to decide before/after
+        const rect = taskEl?.getBoundingClientRect()
+        const midY = rect ? rect.top + rect.height / 2 : 0
+        insertIdx = e.clientY < midY ? targetIdx : targetIdx + 1
+      }
     }
 
     // Build new order
