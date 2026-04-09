@@ -104,6 +104,7 @@ cp .env.example .env
 #   QBIT_USER=...
 #   QBIT_PASS=...
 #   TMDB_API_KEY=...    (free at themoviedb.org)
+#   API_KEY=...         (optional — protects backend from non-localhost callers)
 
 # Backend
 cd backend
@@ -118,6 +119,16 @@ cd ../frontend && npm install && npm run dev
 Open `http://localhost:3000`. API docs at `http://localhost:8002/docs`.
 
 **Requirements:** Python 3.10+, Node.js 18+, Docker, Jellyfin, and qBittorrent accessible on the local network.
+
+### Authentication
+
+The backend ships with an opt-in API-key middleware (`backend/app/middleware.py`). When `API_KEY` is set in `.env`, every request from a non-localhost client must send a matching `X-API-Key` header — useful when exposing the backend over Tailscale or a tunnel. Requests from `127.0.0.1`/`::1` (the Next.js proxy on the same host) are always trusted, so the local dev experience is unchanged. Leave `API_KEY` empty to keep the previous open-access behavior.
+
+Generate a key with:
+
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
 
 ---
 

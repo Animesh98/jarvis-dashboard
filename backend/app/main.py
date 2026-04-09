@@ -7,6 +7,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.responses import Response, PlainTextResponse
 
 from app.config import settings
+from app.middleware import APIKeyMiddleware
 from app.routers import system, docker, torrents, media, recommendations, files, actions, streaming, tasks, watchlist
 from app.services import qbittorrent as qbit_svc
 from app.services import system as system_svc
@@ -52,6 +53,10 @@ app = FastAPI(
     docs_url="/docs",
     lifespan=lifespan,
 )
+
+# Auth middleware — runs before every request
+# See middleware.py for how localhost vs external is handled
+app.add_middleware(APIKeyMiddleware)
 
 app.include_router(system.router)
 app.include_router(docker.router)

@@ -11,3 +11,8 @@ docs/generate_pdf.py
 .pytest_cache/
 docs/screenshots/debug-subtitles.js
 docs/screenshots/fix-subtitles.js
+
+# Local data files
+*.db
+backend/tasks.json
+

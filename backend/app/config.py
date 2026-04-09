@@ -21,6 +21,10 @@ class Settings(BaseSettings):
 
     omdb_api_key: str = ""
 
+    # Dashboard API key — protects direct backend access from non-localhost clients
+    # Generate one with: python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+    api_key: str = ""
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

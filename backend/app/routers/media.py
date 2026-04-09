@@ -12,9 +12,13 @@ router = APIRouter(prefix="/api/jellyfin", tags=["media"])
 
 _ROUTE_MAP = {
     "/items/counts": "/Items/Counts",
-    "/items/latest": "/Items/Latest?Limit=10",
     "/sessions": "/Sessions",
     "/system/info": "/System/Info",
+}
+
+# Routes that require a Jellyfin user ID prefix
+_USER_ROUTE_MAP = {
+    "/items/latest": "/Items/Latest?Limit=10&Fields=Overview,ImageTags,RunTimeTicks,CommunityRating,Genres,ProviderIds,OfficialRating,SeriesId,SeriesPrimaryImageTag",
 }
 
 
@@ -132,6 +136,12 @@ def jellyfin_proxy(path: str):
     jf_path = _ROUTE_MAP.get(route)
     if jf_path:
         return jellyfin_svc.request(jf_path)
+    user_path = _USER_ROUTE_MAP.get(route)
+    if user_path:
+        user_id = _get_user_id()
+        if not user_id:
+            return {"error": "No Jellyfin user found"}
+        return jellyfin_svc.request(f"/Users/{user_id}{user_path}")
     return {"error": "Unknown endpoint"}
 
 
