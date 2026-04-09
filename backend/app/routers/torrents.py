@@ -29,6 +29,9 @@ class TorrentDeleteRequest(BaseModel):
 
 @router.get("/torrent-search")
 def search(q: str = ""):
+    # Search is provider-agnostic — it queries apibay.org, not the active
+    # torrent client. The implementation just happens to live in qbit_svc
+    # for historical reasons; it works identically for Transmission users.
     if not q:
         return {"error": "Missing query"}
     return qbit_svc.search_torrents(q)
