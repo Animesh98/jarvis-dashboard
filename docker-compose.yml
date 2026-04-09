@@ -5,7 +5,11 @@ services:
     restart: unless-stopped
     env_file: .env
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # docker.sock is mounted read-write because /api/docker/action needs to
+      # start/stop/restart containers. Trust model: the backend sits behind
+      # the Next.js proxy on the same host (and the API_KEY middleware if
+      # enabled), so the socket is never reachable from the network.
+      - /var/run/docker.sock:/var/run/docker.sock
       - backend-data:/app/data
     ports:
       - "8002:8002"
