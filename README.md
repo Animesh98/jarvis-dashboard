@@ -132,13 +132,13 @@ Copy `.env.example` to `.env` and set your values:
 |----------|----------|-------------|
 | `JELLYFIN_API_KEY` | Yes | Jellyfin API key |
 | `TMDB_API_KEY` | Yes | Free at [themoviedb.org](https://www.themoviedb.org/settings/api) |
-| `TORRENT_CLIENT` | No | `transmission` (default) or `qbittorrent` |
-| `TRANSMISSION_BASE` | No | Transmission RPC URL (default: `http://localhost:9091/transmission/rpc`) |
-| `TRANSMISSION_USER` | No | Transmission username |
-| `TRANSMISSION_PASS` | No | Transmission password |
+| `TORRENT_CLIENT` | No | `qbittorrent` (default) or `transmission` |
+| `QBIT_USER` | If qBit | qBittorrent username |
+| `QBIT_PASS` | If qBit | qBittorrent password |
 | `QBIT_BASE` | No | qBittorrent API URL (default: `http://localhost:8080/api/v2`) |
-| `QBIT_USER` | No | qBittorrent username |
-| `QBIT_PASS` | No | qBittorrent password |
+| `TRANSMISSION_USER` | If Transmission, w/ auth | Transmission username |
+| `TRANSMISSION_PASS` | If Transmission, w/ auth | Transmission password |
+| `TRANSMISSION_BASE` | No | Transmission RPC URL (default: `http://localhost:9091/transmission/rpc`) |
 | `MEDIA_PATH` | No | Media root path (default: `/data/media`) |
 | `JELLYFIN_BASE` | No | Jellyfin URL (default: `http://localhost:8096`) |
 | `WEATHER_CITY` | No | City name for weather widget |

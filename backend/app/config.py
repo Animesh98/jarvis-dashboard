@@ -5,7 +5,10 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8002
 
-    torrent_client: str = "transmission"  # "transmission" or "qbittorrent"
+    # Default to qbittorrent so existing installs (which predate the
+    # transmission option) keep working without setting TORRENT_CLIENT.
+    # New installs can opt in by setting TORRENT_CLIENT=transmission in .env.
+    torrent_client: str = "qbittorrent"  # "transmission" or "qbittorrent"
 
     qbit_base: str = "http://localhost:8080/api/v2"
     qbit_user: str = ""
