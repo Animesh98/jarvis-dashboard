@@ -10,7 +10,10 @@
   pointer-events: none;
   transition: opacity $duration-slow;
 
-  &.open { opacity: 1; pointer-events: auto; }
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .panel {
@@ -29,7 +32,9 @@
   flex-direction: column;
   border-radius: $radius-lg 0 0 $radius-lg;
 
-  &.open { transform: translateX(0); }
+  &.open {
+    transform: translateX(0);
+  }
 }
 
 .header {
@@ -55,7 +60,10 @@
   padding: $space-xs $space-sm;
   border-radius: 8px;
   transition: all $duration-fast;
-  &:hover { background: rgba($red, 0.1); color: $red; }
+  &:hover {
+    background: rgba($red, 0.1);
+    color: $red;
+  }
 }
 
 .actions {

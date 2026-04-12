@@ -4,7 +4,7 @@
 //  Theme CSS Variables
 // ═══════════════════════════════════════
 :root,
-[data-theme="dark"] {
+[data-theme='dark'] {
   --bg-primary: #000000;
   --bg-secondary: #0a0a0a;
   --bg-tertiary: #1c1c1e;
@@ -51,7 +51,12 @@
   --progress-bg: rgba(255, 255, 255, 0.06);
   --card-hover-border: rgba(255, 255, 255, 0.08);
   --card-interactive-hover-border: rgba(255, 255, 255, 0.1);
-  --shine-gradient: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%);
+  --shine-gradient: linear-gradient(
+    135deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 60%
+  );
   --selection-bg: rgba(10, 132, 255, 0.3);
   --row-border: rgba(255, 255, 255, 0.02);
   --row-hover: rgba(255, 255, 255, 0.02);
@@ -61,7 +66,7 @@
   color-scheme: dark;
 }
 
-[data-theme="light"] {
+[data-theme='light'] {
   --bg-primary: #f5f5f7;
   --bg-secondary: #ececee;
   --bg-tertiary: #e5e5ea;
@@ -108,7 +113,12 @@
   --progress-bg: rgba(0, 0, 0, 0.06);
   --card-hover-border: rgba(0, 0, 0, 0.1);
   --card-interactive-hover-border: rgba(0, 0, 0, 0.12);
-  --shine-gradient: linear-gradient(135deg, transparent 40%, rgba(0,0,0,0.02) 50%, transparent 60%);
+  --shine-gradient: linear-gradient(
+    135deg,
+    transparent 40%,
+    rgba(0, 0, 0, 0.02) 50%,
+    transparent 60%
+  );
   --selection-bg: rgba(0, 122, 255, 0.2);
   --row-border: rgba(0, 0, 0, 0.04);
   --row-hover: rgba(0, 0, 0, 0.02);
@@ -118,7 +128,9 @@
   color-scheme: light;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -138,19 +150,28 @@ body {
   line-height: 1.47059;
   letter-spacing: -0.022em;
   overflow-x: hidden;
-  transition: background $duration-slow $ease-smooth, color $duration-slow $ease-smooth;
+  transition:
+    background $duration-slow $ease-smooth,
+    color $duration-slow $ease-smooth;
 }
 
 ::selection {
   background: var(--selection-bg);
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: 3px;
-  &:hover { background: var(--scrollbar-thumb-hover); }
+  &:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
 }
 
 // ═══════════════════════════════════════
@@ -176,7 +197,9 @@ body {
   align-items: center;
   padding: 0 $space-2xl;
   gap: $space-xl;
-  transition: background $duration-slow $ease-smooth, border-color $duration-slow $ease-smooth;
+  transition:
+    background $duration-slow $ease-smooth,
+    border-color $duration-slow $ease-smooth;
 
   @include mobile {
     padding: 0 $space-lg;
@@ -206,7 +229,9 @@ body {
   box-shadow: 0 4px 12px rgba($blue, 0.25);
   transition: transform $duration-normal $ease-spring;
 
-  &:hover { transform: scale(1.08) rotate(-2deg); }
+  &:hover {
+    transform: scale(1.08) rotate(-2deg);
+  }
 }
 
 .topnav-title {
@@ -215,7 +240,9 @@ body {
   color: var(--text-primary);
   letter-spacing: -0.02em;
 
-  @include mobile { display: none; }
+  @include mobile {
+    display: none;
+  }
 }
 
 .topnav-links {
@@ -225,7 +252,9 @@ body {
   flex: 1;
   justify-content: center;
 
-  @include mobile { display: none; }
+  @include mobile {
+    display: none;
+  }
 }
 
 .topnav-link {
@@ -241,18 +270,25 @@ body {
   transition: all $duration-fast $ease-smooth;
   white-space: nowrap;
 
-  svg { opacity: 0.5; transition: opacity $duration-fast; }
+  svg {
+    opacity: 0.5;
+    transition: opacity $duration-fast;
+  }
 
   &:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
-    svg { opacity: 0.8; }
+    svg {
+      opacity: 0.8;
+    }
   }
 
   &.active {
     background: rgba($blue, 0.1);
     color: var(--blue);
-    svg { opacity: 1; }
+    svg {
+      opacity: 1;
+    }
   }
 }
 
@@ -269,7 +305,9 @@ body {
   color: var(--text-tertiary);
   letter-spacing: 0.02em;
 
-  @include mobile { display: none; }
+  @include mobile {
+    display: none;
+  }
 }
 
 // Theme toggle
@@ -293,7 +331,9 @@ body {
     border-color: var(--card-hover-border);
     transform: scale(1.08);
   }
-  &:active { transform: scale(0.95); }
+  &:active {
+    transform: scale(0.95);
+  }
 }
 
 .theme-toggle-icon {
@@ -301,7 +341,9 @@ body {
   align-items: center;
   justify-content: center;
   transition: transform $duration-normal $ease-spring;
-  .theme-toggle:hover & { transform: rotate(15deg); }
+  .theme-toggle:hover & {
+    transform: rotate(15deg);
+  }
 }
 
 // Main content — full width, top padding for nav
@@ -359,7 +401,9 @@ body {
   padding: $space-2xl;
   max-width: $max-content;
   margin: 0 auto;
-  @include mobile { padding: $space-lg; }
+  @include mobile {
+    padding: $space-lg;
+  }
 }
 
 // Mobile nav
@@ -375,9 +419,13 @@ body {
   padding: $space-xs;
   padding-bottom: calc(#{$space-xs} + env(safe-area-inset-bottom, 0px));
   justify-content: space-around;
-  transition: background $duration-slow $ease-smooth, border-color $duration-slow $ease-smooth;
+  transition:
+    background $duration-slow $ease-smooth,
+    border-color $duration-slow $ease-smooth;
 
-  @include mobile { display: flex; }
+  @include mobile {
+    display: flex;
+  }
 }
 
 .mobile-nav-item {
@@ -393,7 +441,9 @@ body {
   font-size: 0.5625rem;
   font-weight: 500;
   cursor: pointer;
-  transition: color $duration-fast, transform $duration-normal $ease-spring;
+  transition:
+    color $duration-fast,
+    transform $duration-normal $ease-spring;
   text-decoration: none;
   min-width: 42px;
 
@@ -402,10 +452,14 @@ body {
     transition: transform $duration-normal $ease-spring;
   }
 
-  &:active { transform: scale(0.92); }
+  &:active {
+    transform: scale(0.92);
+  }
   &.active {
     color: var(--blue);
-    .mobile-nav-icon { transform: scale(1.1); }
+    .mobile-nav-icon {
+      transform: scale(1.1);
+    }
   }
 }
 
@@ -417,8 +471,12 @@ body {
 .card {
   @include card;
   overflow: hidden;
-  transition: border-color $duration-normal, background $duration-slow $ease-smooth;
-  &:hover { border-color: var(--card-hover-border); }
+  transition:
+    border-color $duration-normal,
+    background $duration-slow $ease-smooth;
+  &:hover {
+    border-color: var(--card-hover-border);
+  }
 }
 
 .card-header {
@@ -437,7 +495,9 @@ body {
   letter-spacing: 0.06em;
 }
 
-.card-body { padding: $space-xl; }
+.card-body {
+  padding: $space-xl;
+}
 
 // Metric card (interactive)
 .metric-card {
@@ -464,7 +524,9 @@ body {
     transition: opacity $duration-slow;
     pointer-events: none;
   }
-  &:hover::after { opacity: 1; }
+  &:hover::after {
+    opacity: 1;
+  }
 }
 
 .metric-label {
@@ -508,12 +570,30 @@ body {
   font-weight: 600;
   letter-spacing: 0.02em;
 
-  &.green { background: rgba($green, 0.12); color: var(--green); }
-  &.red { background: rgba($red, 0.12); color: var(--red); }
-  &.blue { background: rgba($blue, 0.12); color: var(--blue); }
-  &.orange { background: rgba($orange, 0.12); color: var(--orange); }
-  &.purple { background: rgba($purple, 0.12); color: var(--purple); }
-  &.gray { background: var(--btn-secondary-bg); color: var(--text-secondary); }
+  &.green {
+    background: rgba($green, 0.12);
+    color: var(--green);
+  }
+  &.red {
+    background: rgba($red, 0.12);
+    color: var(--red);
+  }
+  &.blue {
+    background: rgba($blue, 0.12);
+    color: var(--blue);
+  }
+  &.orange {
+    background: rgba($orange, 0.12);
+    color: var(--orange);
+  }
+  &.purple {
+    background: rgba($purple, 0.12);
+    color: var(--purple);
+  }
+  &.gray {
+    background: var(--btn-secondary-bg);
+    color: var(--text-secondary);
+  }
 }
 
 // Buttons
@@ -533,8 +613,13 @@ body {
   position: relative;
   overflow: hidden;
 
-  &:active:not(:disabled) { transform: scale(0.96); }
-  &:disabled { opacity: 0.35; cursor: not-allowed; }
+  &:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
 }
 
 .btn-primary {
@@ -550,19 +635,27 @@ body {
 .btn-secondary {
   background: var(--btn-secondary-bg);
   color: var(--text-primary);
-  &:hover:not(:disabled) { background: var(--btn-secondary-hover); }
+  &:hover:not(:disabled) {
+    background: var(--btn-secondary-hover);
+  }
 }
 
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
-  &:hover:not(:disabled) { background: var(--btn-ghost-hover); color: var(--text-primary); }
+  &:hover:not(:disabled) {
+    background: var(--btn-ghost-hover);
+    color: var(--text-primary);
+  }
 }
 
 .btn-danger {
   background: rgba($red, 0.12);
   color: var(--red);
-  &:hover:not(:disabled) { background: rgba($red, 0.2); box-shadow: 0 2px 8px rgba($red, 0.2); }
+  &:hover:not(:disabled) {
+    background: rgba($red, 0.2);
+    box-shadow: 0 2px 8px rgba($red, 0.2);
+  }
 }
 
 .btn-sm {
@@ -582,17 +675,27 @@ body {
   font-size: $text-base;
   color: var(--text-primary);
   outline: none;
-  transition: border-color $duration-fast, box-shadow $duration-fast, background $duration-fast;
+  transition:
+    border-color $duration-fast,
+    box-shadow $duration-fast,
+    background $duration-fast;
 
-  &::placeholder { color: var(--text-tertiary); }
+  &::placeholder {
+    color: var(--text-tertiary);
+  }
   &:focus {
     border-color: var(--blue);
-    box-shadow: 0 0 0 3px rgba($blue, 0.15), 0 0 20px rgba($blue, 0.05);
+    box-shadow:
+      0 0 0 3px rgba($blue, 0.15),
+      0 0 20px rgba($blue, 0.05);
     background: var(--input-focus-bg);
   }
 }
 
-.input-mono { font-family: $font-mono; font-size: $text-sm; }
+.input-mono {
+  font-family: $font-mono;
+  font-size: $text-sm;
+}
 
 // Progress
 .progress {
@@ -607,11 +710,23 @@ body {
   border-radius: 2px;
   transition: width 1s $ease-smooth;
 
-  &.green { background: var(--green); box-shadow: 0 0 8px rgba($green, 0.3); }
-  &.blue { background: var(--blue); box-shadow: 0 0 8px rgba($blue, 0.3); }
-  &.red { background: var(--red); }
-  &.orange { background: var(--orange); }
-  &.gray { background: var(--text-tertiary); }
+  &.green {
+    background: var(--green);
+    box-shadow: 0 0 8px rgba($green, 0.3);
+  }
+  &.blue {
+    background: var(--blue);
+    box-shadow: 0 0 8px rgba($blue, 0.3);
+  }
+  &.red {
+    background: var(--red);
+  }
+  &.orange {
+    background: var(--orange);
+  }
+  &.gray {
+    background: var(--text-tertiary);
+  }
 }
 
 // Toast
@@ -634,18 +749,35 @@ body {
   font-size: $text-sm;
   font-weight: 500;
   pointer-events: auto;
-  animation: toastIn $duration-normal $ease-spring, toastOut $duration-normal $ease-smooth 4.7s forwards;
+  animation:
+    toastIn $duration-normal $ease-spring,
+    toastOut $duration-normal $ease-smooth 4.7s forwards;
 
-  &.success { color: var(--green); border-color: rgba($green, 0.2); }
-  &.error { color: var(--red); border-color: rgba($red, 0.2); }
+  &.success {
+    color: var(--green);
+    border-color: rgba($green, 0.2);
+  }
+  &.error {
+    color: var(--red);
+    border-color: rgba($red, 0.2);
+  }
 }
 
 @keyframes toastIn {
-  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 @keyframes toastOut {
-  to { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
 }
 
 // Status dot
@@ -655,15 +787,32 @@ body {
   border-radius: 50%;
   flex-shrink: 0;
 
-  &.running { background: var(--green); box-shadow: 0 0 8px rgba($green, 0.5); animation: pulse 2s ease infinite; }
-  &.exited { background: var(--red); box-shadow: 0 0 4px rgba($red, 0.3); }
-  &.restarting { background: var(--orange); animation: pulse 1s ease infinite; }
-  &.paused { background: var(--text-tertiary); }
+  &.running {
+    background: var(--green);
+    box-shadow: 0 0 8px rgba($green, 0.5);
+    animation: pulse 2s ease infinite;
+  }
+  &.exited {
+    background: var(--red);
+    box-shadow: 0 0 4px rgba($red, 0.3);
+  }
+  &.restarting {
+    background: var(--orange);
+    animation: pulse 1s ease infinite;
+  }
+  &.paused {
+    background: var(--text-tertiary);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
 // Segment control
@@ -687,7 +836,9 @@ body {
   cursor: pointer;
   transition: all $duration-fast $ease-smooth;
 
-  &:hover:not(.active) { color: var(--text-primary); }
+  &:hover:not(.active) {
+    color: var(--text-primary);
+  }
   &.active {
     background: var(--segment-active-bg);
     color: var(--text-primary);
@@ -696,7 +847,9 @@ body {
 }
 
 // Section
-.section { margin-bottom: $space-2xl; }
+.section {
+  margin-bottom: $space-2xl;
+}
 
 .section-title {
   font-size: $text-xs;
@@ -726,27 +879,49 @@ body {
 
 // Animations
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.97); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.fade-in { animation: fadeIn $duration-normal $ease-smooth both; }
+.fade-in {
+  animation: fadeIn $duration-normal $ease-smooth both;
+}
 
 // Stagger children animation utility
 .stagger-children > * {
   animation: fadeIn $duration-normal $ease-smooth both;
   @for $i from 1 through 20 {
-    &:nth-child(#{$i}) { animation-delay: #{$i * 30}ms; }
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 30}ms;
+    }
   }
 }
 
@@ -755,8 +930,18 @@ body {
 // ═══════════════════════════════════════
 // Apply smooth transitions to all theme-aware elements on theme change
 html[data-theme] {
-  .topnav, .page-header, .mobile-nav, .card, .metric-card, .badge, .btn,
-  .segment-control, .segment-btn, .input, .toast, .progress {
+  .topnav,
+  .page-header,
+  .mobile-nav,
+  .card,
+  .metric-card,
+  .badge,
+  .btn,
+  .segment-control,
+  .segment-btn,
+  .input,
+  .toast,
+  .progress {
     transition-property: background, color, border-color, box-shadow;
     transition-duration: $duration-slow;
     transition-timing-function: $ease-smooth;

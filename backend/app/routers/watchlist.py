@@ -30,8 +30,12 @@ def list_watchlist(category: str = ""):
 @router.post("")
 def add_to_watchlist(body: WatchlistAdd):
     return db.watchlist_add(
-        body.tmdb_id, body.media_type, body.title,
-        body.year, body.poster, body.category,
+        body.tmdb_id,
+        body.media_type,
+        body.title,
+        body.year,
+        body.poster,
+        body.category,
     )
 
 

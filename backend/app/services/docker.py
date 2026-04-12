@@ -1,10 +1,10 @@
+import asyncio
 import json
 import re
 import subprocess
-import asyncio
-from ptyprocess import PtyProcess
-from fastapi import WebSocket, WebSocketDisconnect
 
+from fastapi import WebSocket, WebSocketDisconnect
+from ptyprocess import PtyProcess
 
 SAFE_CONTAINER_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.\-]+$")
 ALLOWED_ACTIONS = {"start", "stop", "restart"}
@@ -20,9 +20,7 @@ def get_containers() -> dict | list:
         )
         if r.returncode != 0:
             return {"error": f"docker ps failed: {r.stderr.strip()}"}
-        return [
-            json.loads(line) for line in r.stdout.strip().split("\n") if line.strip()
-        ]
+        return [json.loads(line) for line in r.stdout.strip().split("\n") if line.strip()]
     except subprocess.TimeoutExpired:
         return {"error": "docker ps timed out"}
     except Exception as e:
@@ -39,9 +37,7 @@ def get_stats() -> dict | list:
         )
         if r.returncode != 0:
             return {"error": f"docker stats failed: {r.stderr.strip()}"}
-        return [
-            json.loads(line) for line in r.stdout.strip().split("\n") if line.strip()
-        ]
+        return [json.loads(line) for line in r.stdout.strip().split("\n") if line.strip()]
     except subprocess.TimeoutExpired:
         return {"error": "docker stats timed out"}
     except Exception as e:
@@ -98,9 +94,7 @@ def get_images() -> dict | list:
         )
         if r.returncode != 0:
             return {"error": f"docker images failed: {r.stderr.strip()}"}
-        return [
-            json.loads(line) for line in r.stdout.strip().split("\n") if line.strip()
-        ]
+        return [json.loads(line) for line in r.stdout.strip().split("\n") if line.strip()]
     except subprocess.TimeoutExpired:
         return {"error": "docker images timed out"}
     except Exception as e:

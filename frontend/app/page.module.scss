@@ -5,8 +5,12 @@
   grid-template-columns: repeat(3, 1fr);
   gap: $space-lg;
 
-  @include tablet { grid-template-columns: repeat(2, 1fr); }
-  @include mobile { grid-template-columns: 1fr; }
+  @include tablet {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
 }
 
 .cardIcon {
@@ -15,7 +19,9 @@
   right: $space-lg;
   color: var(--text-tertiary);
   opacity: 0.4;
-  transition: opacity $duration-normal, transform $duration-normal $ease-spring;
+  transition:
+    opacity $duration-normal,
+    transform $duration-normal $ease-spring;
 
   .metric-card:hover & {
     opacity: 0.7;
@@ -30,7 +36,9 @@
   color: var(--text-tertiary);
   opacity: 0;
   transform: translateX(-4px);
-  transition: opacity $duration-normal, transform $duration-normal $ease-smooth;
+  transition:
+    opacity $duration-normal,
+    transform $duration-normal $ease-smooth;
 
   .metric-card:hover & {
     opacity: 0.5;
@@ -52,7 +60,9 @@
   gap: $space-xs;
   transition: transform $duration-normal $ease-spring;
 
-  &:hover { transform: scale(1.08); }
+  &:hover {
+    transform: scale(1.08);
+  }
 }
 
 .miniLabel {
@@ -137,10 +147,23 @@
   color: var(--text-primary);
 }
 
-.netArrowDown { font-size: $text-xl; font-weight: 700; color: $green; }
-.netArrowUp { font-size: $text-xl; font-weight: 700; color: $blue; }
+.netArrowDown {
+  font-size: $text-xl;
+  font-weight: 700;
+  color: $green;
+}
+.netArrowUp {
+  font-size: $text-xl;
+  font-weight: 700;
+  color: $blue;
+}
 
-.weatherCard { cursor: default !important; &:hover { transform: none !important; } }
+.weatherCard {
+  cursor: default !important;
+  &:hover {
+    transform: none !important;
+  }
+}
 
 .tempRow {
   display: flex;

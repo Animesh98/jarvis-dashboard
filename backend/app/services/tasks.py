@@ -6,7 +6,7 @@ import os
 import tempfile
 import time
 import uuid
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 from threading import Lock
 
@@ -64,8 +64,7 @@ def list_tasks(for_date: str | None = None) -> list[dict]:
     return tasks
 
 
-def create_task(title: str, column: str = "todo", entities: list | None = None,
-                task_date: str | None = None) -> dict:
+def create_task(title: str, column: str = "todo", entities: list | None = None, task_date: str | None = None) -> dict:
     task = {
         "id": uuid.uuid4().hex[:12],
         "title": title,
@@ -123,8 +122,7 @@ def reorder(task_orders: list[dict]) -> bool:
         if updated > 0:
             _write(tasks)
         else:
-            logger.warning("Reorder called but no tasks matched: %s",
-                           [i.get("id") for i in task_orders])
+            logger.warning("Reorder called but no tasks matched: %s", [i.get("id") for i in task_orders])
     return updated > 0
 
 

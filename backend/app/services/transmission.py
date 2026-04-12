@@ -10,13 +10,13 @@ _client = httpx.Client(timeout=10)
 
 # Transmission status codes → qBit-compatible state strings
 _STATUS_MAP = {
-    0: "stopped",      # Stopped
-    1: "checkingDL",   # Check pending
-    2: "checkingDL",   # Checking
-    3: "queuedDL",     # Download pending
+    0: "stopped",  # Stopped
+    1: "checkingDL",  # Check pending
+    2: "checkingDL",  # Checking
+    3: "queuedDL",  # Download pending
     4: "downloading",  # Downloading
-    5: "queuedUP",     # Seed pending
-    6: "uploading",    # Seeding
+    5: "queuedUP",  # Seed pending
+    6: "uploading",  # Seeding
 }
 
 _CATEGORY_PATHS = {
@@ -27,10 +27,22 @@ _CATEGORY_PATHS = {
 }
 
 _TORRENT_FIELDS = [
-    "id", "hashString", "name", "percentDone", "status",
-    "totalSize", "rateDownload", "rateUpload", "eta",
-    "downloadDir", "labels", "isFinished", "sizeWhenDone",
-    "leftUntilDone", "error", "errorString",
+    "id",
+    "hashString",
+    "name",
+    "percentDone",
+    "status",
+    "totalSize",
+    "rateDownload",
+    "rateUpload",
+    "eta",
+    "downloadDir",
+    "labels",
+    "isFinished",
+    "sizeWhenDone",
+    "leftUntilDone",
+    "error",
+    "errorString",
 ]
 
 
@@ -47,8 +59,7 @@ def _rpc(method: str, arguments: dict | None = None, retry: bool = True) -> dict
     if settings.transmission_user:
         auth = (settings.transmission_user, settings.transmission_pass)
     try:
-        resp = _client.post(settings.transmission_base, json=payload,
-                            headers=headers, auth=auth)
+        resp = _client.post(settings.transmission_base, json=payload, headers=headers, auth=auth)
         if resp.status_code == 409 and retry:
             _session_id = resp.headers.get("X-Transmission-Session-Id")
             return _rpc(method, arguments, retry=False)
@@ -119,10 +130,10 @@ def add_torrent(magnet: str, category: str = "") -> dict:
     if not magnet.startswith("magnet:"):
         return {"error": "Invalid magnet link"}
     if not category:
-        dn_match = re.search(r'dn=([^&]+)', magnet)
+        dn_match = re.search(r"dn=([^&]+)", magnet)
         if dn_match:
             dn = urllib.parse.unquote(dn_match.group(1))
-            if re.search(r'\bS\d{1,2}|[Ss]eason\s*\d', dn):
+            if re.search(r"\bS\d{1,2}|[Ss]eason\s*\d", dn):
                 category = "tv"
             else:
                 category = "movies"
@@ -163,10 +174,13 @@ def delete_torrent(hashes: list[str], delete_files: bool = False) -> dict:
     ids = _resolve_ids(hashes)
     if not ids:
         return {"error": "Torrent not found"}
-    resp = _rpc("torrent-remove", {
-        "ids": ids,
-        "delete-local-data": delete_files,
-    })
+    resp = _rpc(
+        "torrent-remove",
+        {
+            "ids": ids,
+            "delete-local-data": delete_files,
+        },
+    )
     return {"ok": True} if not resp.get("error") else resp
 
 
@@ -182,7 +196,10 @@ def clean_completed() -> dict:
                 delete_torrent([h], delete_files=False)
                 cleaned.append(t.get("name", h))
     if cleaned:
-        return {"ok": True, "message": f"Removed {len(cleaned)} completed: {', '.join(cleaned[:3])}{'...' if len(cleaned) > 3 else ''}"}
+        return {
+            "ok": True,
+            "message": f"Removed {len(cleaned)} completed: {', '.join(cleaned[:3])}{'...' if len(cleaned) > 3 else ''}",
+        }
     return {"ok": True, "message": "No completed torrents to clean"}
 
 
@@ -192,5 +209,5 @@ def _resolve_ids(hashes: list[str]) -> list[int]:
     if resp.get("error"):
         return []
     all_t = resp.get("arguments", {}).get("torrents", [])
-    hash_set = set(h.lower() for h in hashes)
+    hash_set = {h.lower() for h in hashes}
     return [t["id"] for t in all_t if t.get("hashString", "").lower() in hash_set]

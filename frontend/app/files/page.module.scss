@@ -1,8 +1,16 @@
 @use '../../styles/variables' as *;
 
-.navBtns { display: flex; gap: $space-xs; align-items: center; }
+.navBtns {
+  display: flex;
+  gap: $space-xs;
+  align-items: center;
+}
 
-.pathBar { display: flex; gap: $space-sm; margin-bottom: $space-md; }
+.pathBar {
+  display: flex;
+  gap: $space-sm;
+  margin-bottom: $space-md;
+}
 
 .breadcrumb {
   display: flex;
@@ -13,7 +21,9 @@
   font-size: $text-sm;
   margin-bottom: $space-lg;
   padding: $space-xs 0;
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .crumb {
@@ -22,11 +32,21 @@
   padding: $space-xs $space-sm;
   border-radius: 6px;
   transition: all $duration-fast;
-  &:hover { color: $blue; background: rgba($blue, 0.08); }
+  &:hover {
+    color: $blue;
+    background: rgba($blue, 0.08);
+  }
 }
 
-.crumbCurrent { color: var(--text-primary); font-weight: 500; }
-.sep { color: var(--card-hover-border); margin: 0 1px; user-select: none; }
+.crumbCurrent {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.sep {
+  color: var(--card-hover-border);
+  margin: 0 1px;
+  user-select: none;
+}
 
 .row {
   display: flex;
@@ -36,9 +56,14 @@
   gap: $space-sm;
   font-size: $text-sm;
   cursor: pointer;
-  transition: background $duration-fast, padding-left $duration-normal $ease-smooth;
+  transition:
+    background $duration-fast,
+    padding-left $duration-normal $ease-smooth;
 
-  &:hover:not(.rowHeader) { background: rgba($blue, 0.03); padding-left: 24px; }
+  &:hover:not(.rowHeader) {
+    background: rgba($blue, 0.03);
+    padding-left: 24px;
+  }
 
   @include mobile {
     padding: $space-sm $space-md;
@@ -53,10 +78,15 @@
   letter-spacing: 0.04em;
   cursor: default;
   border-bottom: 1px solid var(--row-border-strong);
-  &:hover { padding-left: $space-xl !important; }
+  &:hover {
+    padding-left: $space-xl !important;
+  }
 }
 
-.rowSelected { background: rgba($blue, 0.06) !important; border-left: 2px solid $blue; }
+.rowSelected {
+  background: rgba($blue, 0.06) !important;
+  border-left: 2px solid $blue;
+}
 
 .icon {
   width: 22px;
@@ -67,11 +97,47 @@
   color: var(--text-tertiary);
 }
 
-.name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
-.nameDir { color: $blue; font-weight: 500; }
-.size { width: 70px; text-align: right; font-family: $font-mono; font-size: $text-xs; color: var(--text-tertiary); flex-shrink: 0; white-space: nowrap; }
-.modified { width: 100px; text-align: right; font-family: $font-mono; font-size: $text-xs; color: var(--text-tertiary); flex-shrink: 0; @include mobile { display: none; } }
-.perms { width: 80px; font-family: $font-mono; font-size: $text-xs; color: var(--text-tertiary); flex-shrink: 0; @include mobile { display: none; } }
+.name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+.nameDir {
+  color: $blue;
+  font-weight: 500;
+}
+.size {
+  width: 70px;
+  text-align: right;
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.modified {
+  width: 100px;
+  text-align: right;
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  @include mobile {
+    display: none;
+  }
+}
+.perms {
+  width: 80px;
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  @include mobile {
+    display: none;
+  }
+}
 
 .tableWrap {
   overflow-x: auto;
@@ -79,7 +145,11 @@
 }
 
 // Context menu
-.ctxOverlay { position: fixed; inset: 0; z-index: 259; }
+.ctxOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 259;
+}
 
 .ctxMenu {
   position: fixed;
@@ -107,14 +177,27 @@
   color: var(--text-primary);
   cursor: pointer;
   transition: background $duration-fast;
-  &:hover { background: var(--bg-hover); }
+  &:hover {
+    background: var(--bg-hover);
+  }
 }
 
-.ctxDanger { color: $red; &:hover { background: rgba($red, 0.06); } }
+.ctxDanger {
+  color: $red;
+  &:hover {
+    background: rgba($red, 0.06);
+  }
+}
 
 @keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 // Modal
@@ -144,14 +227,32 @@
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.modalTitle { font-size: $text-lg; font-weight: 600; color: var(--text-primary); }
-.modalBtns { display: flex; gap: $space-sm; justify-content: flex-end; }
+.modalTitle {
+  font-size: $text-lg;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.modalBtns {
+  display: flex;
+  gap: $space-sm;
+  justify-content: flex-end;
+}
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

@@ -41,8 +41,10 @@ def init_db():
 
 # --- Watchlist operations ---
 
-def watchlist_add(tmdb_id: str, media_type: str, title: str, year: str = "",
-                  poster: str = "", category: str = "Must Watch") -> dict:
+
+def watchlist_add(
+    tmdb_id: str, media_type: str, title: str, year: str = "", poster: str = "", category: str = "Must Watch"
+) -> dict:
     with _lock:
         conn = _get_conn()
         try:
@@ -82,9 +84,7 @@ def watchlist_list(category: str = "") -> list[dict]:
                     (category,),
                 ).fetchall()
             else:
-                rows = conn.execute(
-                    "SELECT * FROM watchlist ORDER BY added_at DESC"
-                ).fetchall()
+                rows = conn.execute("SELECT * FROM watchlist ORDER BY added_at DESC").fetchall()
             return [dict(r) for r in rows]
         finally:
             conn.close()

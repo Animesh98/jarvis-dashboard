@@ -15,9 +15,12 @@ $indigo: #5e5ce6;
 $cyan: #00c7be;
 
 // Typography
-$font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Helvetica Neue', system-ui, sans-serif;
+$font-sans:
+  -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Helvetica Neue',
+  system-ui, sans-serif;
 $font-mono: 'SF Mono', 'Menlo', 'Monaco', 'Cascadia Code', monospace;
-$font-rounded: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Display', system-ui, sans-serif;
+$font-rounded:
+  -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Display', system-ui, sans-serif;
 
 // Font sizes
 $text-xs: 0.6875rem;
@@ -82,7 +85,10 @@ $bp-wide: 1280px;
 }
 
 @mixin card-interactive {
-  transition: transform $duration-normal $ease-smooth, box-shadow $duration-normal $ease-smooth, border-color $duration-normal;
+  transition:
+    transform $duration-normal $ease-smooth,
+    box-shadow $duration-normal $ease-smooth,
+    border-color $duration-normal;
   &:hover {
     transform: translateY(-3px) scale(1.005);
     box-shadow: var(--glass-shadow-lg), var(--glass-glow);
@@ -95,13 +101,19 @@ $bp-wide: 1280px;
 }
 
 @mixin glow($color, $intensity: 0.15) {
-  box-shadow: 0 0 20px rgba($color, $intensity), 0 0 40px rgba($color, $intensity * 0.5);
+  box-shadow:
+    0 0 20px rgba($color, $intensity),
+    0 0 40px rgba($color, $intensity * 0.5);
 }
 
 @mixin mobile {
-  @media (max-width: $bp-tablet) { @content; }
+  @media (max-width: $bp-tablet) {
+    @content;
+  }
 }
 
 @mixin tablet {
-  @media (max-width: $bp-desktop) { @content; }
+  @media (max-width: $bp-desktop) {
+    @content;
+  }
 }

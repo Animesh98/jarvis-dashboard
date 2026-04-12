@@ -12,11 +12,14 @@ ALLANIME_API = "https://api.allanime.day/api"
 ALLANIME_REFERER = "https://allmanga.to"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
 
-_client = httpx.Client(timeout=15, headers={
-    "User-Agent": USER_AGENT,
-    "Referer": ALLANIME_REFERER,
-    "Accept": "application/json",
-})
+_client = httpx.Client(
+    timeout=15,
+    headers={
+        "User-Agent": USER_AGENT,
+        "Referer": ALLANIME_REFERER,
+        "Accept": "application/json",
+    },
+)
 
 SEARCH_GQL = """query( $search: SearchInput $limit: Int $page: Int $translationType: VaildTranslationTypeEnumType $countryOrigin: VaildCountryOriginEnumType ) { shows( search: $search limit: $limit page: $page translationType: $translationType countryOrigin: $countryOrigin ) { edges { _id name availableEpisodes __typename } } }"""
 
@@ -29,10 +32,14 @@ def _gql(query: str, variables: dict) -> dict:
     """Execute a GraphQL query against the AllAnime API."""
     try:
         import json
-        resp = _client.get(ALLANIME_API, params={
-            "query": query,
-            "variables": json.dumps(variables),
-        })
+
+        resp = _client.get(
+            ALLANIME_API,
+            params={
+                "query": query,
+                "variables": json.dumps(variables),
+            },
+        )
         data = resp.json()
         return data.get("data", {})
     except Exception as e:
@@ -62,12 +69,14 @@ def search(query: str, mode: str = "sub") -> list:
         eps = edge.get("availableEpisodes", {})
         if isinstance(eps, str):
             eps = {}
-        results.append({
-            "id": edge.get("_id", ""),
-            "name": edge.get("name", ""),
-            "episodes_sub": eps.get("sub", 0) if isinstance(eps, dict) else 0,
-            "episodes_dub": eps.get("dub", 0) if isinstance(eps, dict) else 0,
-        })
+        results.append(
+            {
+                "id": edge.get("_id", ""),
+                "name": edge.get("name", ""),
+                "episodes_sub": eps.get("sub", 0) if isinstance(eps, dict) else 0,
+                "episodes_dub": eps.get("dub", 0) if isinstance(eps, dict) else 0,
+            }
+        )
 
     _cache[cache_key] = {"data": results, "ts": now}
     return results

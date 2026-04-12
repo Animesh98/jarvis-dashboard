@@ -1,10 +1,19 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { memo, useEffect, useState } from 'react'
-import { LayoutGrid, Cpu, Container, ArrowDownUp, Film, FolderOpen, Sparkles, SquareCheckBig } from 'lucide-react'
-import ThemeToggle from '@/components/ThemeToggle'
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { memo, useEffect, useState } from 'react';
+import {
+  LayoutGrid,
+  Cpu,
+  Container,
+  ArrowDownUp,
+  Film,
+  FolderOpen,
+  Sparkles,
+  SquareCheckBig,
+} from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const navItems = [
   { href: '/', label: 'Overview', Icon: LayoutGrid },
@@ -15,18 +24,18 @@ const navItems = [
   { href: '/discover', label: 'Discover', Icon: Sparkles },
   { href: '/files', label: 'Files', Icon: FolderOpen },
   { href: '/tasks', label: 'Tasks', Icon: SquareCheckBig },
-]
+];
 
 export default memo(function TopNav() {
-  const pathname = usePathname()
-  const [clock, setClock] = useState('')
+  const pathname = usePathname();
+  const [clock, setClock] = useState('');
 
   useEffect(() => {
-    const tick = () => setClock(new Date().toLocaleTimeString('en-GB', { hour12: false }))
-    tick()
-    const t = setInterval(tick, 1000)
-    return () => clearInterval(t)
-  }, [])
+    const tick = () => setClock(new Date().toLocaleTimeString('en-GB', { hour12: false }));
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, []);
 
   return (
     <header className="topnav">
@@ -54,5 +63,5 @@ export default memo(function TopNav() {
         <ThemeToggle size={15} />
       </div>
     </header>
-  )
-})
+  );
+});

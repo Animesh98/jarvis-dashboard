@@ -1,17 +1,20 @@
 """External ratings service: IMDB (via OMDb) and Letterboxd (via scraping)."""
 
+import concurrent.futures
 import re
 import time
-import concurrent.futures
 
 import httpx
 
 from app.config import settings
 
-_client = httpx.Client(timeout=10, headers={
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/json",
-})
+_client = httpx.Client(
+    timeout=10,
+    headers={
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/json",
+    },
+)
 
 # Cache: {cache_key: {"data": ..., "ts": float}}
 _cache: dict = {}
@@ -62,16 +65,16 @@ def _title_to_letterboxd_slug(title: str) -> str:
     """Convert movie title to Letterboxd URL slug."""
     slug = title.lower()
     # Remove content in parentheses
-    slug = re.sub(r'\([^)]*\)', '', slug).strip()
+    slug = re.sub(r"\([^)]*\)", "", slug).strip()
     # Replace common characters
     slug = slug.replace("&", "and")
     slug = slug.replace("'", "")
     slug = slug.replace("'", "")
     # Replace non-alphanumeric with hyphens
-    slug = re.sub(r'[^a-z0-9]+', '-', slug)
+    slug = re.sub(r"[^a-z0-9]+", "-", slug)
     # Clean up
-    slug = slug.strip('-')
-    slug = re.sub(r'-+', '-', slug)
+    slug = slug.strip("-")
+    slug = re.sub(r"-+", "-", slug)
     return slug
 
 

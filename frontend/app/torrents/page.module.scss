@@ -1,6 +1,10 @@
 @use '../../styles/variables' as *;
 
-.searchBar { display: flex; gap: $space-sm; margin-bottom: $space-lg; }
+.searchBar {
+  display: flex;
+  gap: $space-sm;
+  margin-bottom: $space-lg;
+}
 
 .searchInputWrap {
   flex: 1;
@@ -16,7 +20,9 @@
   pointer-events: none;
 }
 
-.searchInput { padding-left: 38px !important; }
+.searchInput {
+  padding-left: 38px !important;
+}
 
 .results {
   @include card;
@@ -34,24 +40,55 @@
   font-size: $text-sm;
   transition: background $duration-fast;
 
-  &:last-child { border-bottom: none; }
-  &:hover { background: var(--row-border); }
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: var(--row-border);
+  }
 }
 
-.resultName { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
-.resultMeta { font-family: $font-mono; font-size: $text-xs; color: var(--text-tertiary); flex-shrink: 0; display: flex; align-items: center; gap: 2px; }
-.resultSeeds { font-family: $font-mono; font-size: $text-xs; color: $green; flex-shrink: 0; display: flex; align-items: center; gap: 2px; }
+.resultName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+.resultMeta {
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.resultSeeds {
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: $green;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
 
 .addBtn {
   background: rgba($green, 0.1) !important;
   color: $green !important;
-  &:hover { background: rgba($green, 0.18) !important; box-shadow: 0 2px 8px rgba($green, 0.15) !important; }
+  &:hover {
+    background: rgba($green, 0.18) !important;
+    box-shadow: 0 2px 8px rgba($green, 0.15) !important;
+  }
 }
 
 .clearAllBtn {
   background: rgba($orange, 0.1) !important;
   color: $orange !important;
-  &:hover { background: rgba($orange, 0.18) !important; }
+  &:hover {
+    background: rgba($orange, 0.18) !important;
+  }
 }
 
 .sectionDivider {
@@ -80,7 +117,9 @@
   border-color: rgba($green, 0.2) !important;
   background: rgba($green, 0.03) !important;
 
-  .torrentTop { gap: $space-sm; }
+  .torrentTop {
+    gap: $space-sm;
+  }
 }
 
 .completedIcon {
@@ -92,7 +131,9 @@
   background: rgba($green, 0.1) !important;
   color: $green !important;
   flex-shrink: 0;
-  &:hover { background: rgba($green, 0.18) !important; }
+  &:hover {
+    background: rgba($green, 0.18) !important;
+  }
 }
 
 .list {
@@ -111,7 +152,9 @@
   display: flex;
   flex-direction: column;
   gap: $space-sm;
-  transition: border-color $duration-normal, transform $duration-normal $ease-smooth;
+  transition:
+    border-color $duration-normal,
+    transform $duration-normal $ease-smooth;
   overflow: hidden;
   min-width: 0;
 
@@ -125,7 +168,12 @@
   }
 }
 
-.torrentTop { display: flex; align-items: center; gap: $space-sm; min-width: 0; }
+.torrentTop {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  min-width: 0;
+}
 .torrentName {
   flex: 1;
   font-weight: 500;
@@ -151,19 +199,47 @@
   }
 }
 
-.pctLabel { width: 32px; font-weight: 600; color: var(--text-secondary); }
-.torrentMeta { flex-shrink: 0; }
-.torrentSpeed { color: $green; flex-shrink: 0; display: flex; align-items: center; gap: 3px; }
-.torrentEta { color: $orange; flex-shrink: 0; display: flex; align-items: center; gap: 3px; }
-.torrentState { flex-shrink: 0; font-size: 0.6rem; opacity: 0.6; }
+.pctLabel {
+  width: 32px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.torrentMeta {
+  flex-shrink: 0;
+}
+.torrentSpeed {
+  color: $green;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.torrentEta {
+  color: $orange;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.torrentState {
+  flex-shrink: 0;
+  font-size: 0.6rem;
+  opacity: 0.6;
+}
 
 .removeBtn {
   color: var(--text-tertiary) !important;
   opacity: 0;
-  transition: opacity $duration-fast, color $duration-fast;
+  transition:
+    opacity $duration-fast,
+    color $duration-fast;
 
-  .torrent:hover & { opacity: 1; }
-  &:hover { color: $red !important; }
+  .torrent:hover & {
+    opacity: 1;
+  }
+  &:hover {
+    color: $red !important;
+  }
 }
 
 // Remove confirmation modal
@@ -194,7 +270,11 @@
   padding: $space-lg $space-xl;
   border-bottom: 1px solid var(--subtle-border);
 
-  h3 { font-size: $text-base; font-weight: 600; color: var(--text-primary); }
+  h3 {
+    font-size: $text-base;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 }
 
 .modalBody {
@@ -208,7 +288,9 @@
   line-height: 1.5;
   word-break: break-word;
 
-  strong { color: var(--text-primary); }
+  strong {
+    color: var(--text-primary);
+  }
 }
 
 .deleteToggle {
@@ -218,7 +300,9 @@
   cursor: pointer;
   user-select: none;
 
-  input { display: none; }
+  input {
+    display: none;
+  }
 }
 
 .toggleTrack {
@@ -230,7 +314,9 @@
   transition: background $duration-fast;
   flex-shrink: 0;
 
-  input:checked + & { background: $red; }
+  input:checked + & {
+    background: $red;
+  }
 }
 
 .toggleThumb {
@@ -243,7 +329,9 @@
   border-radius: 50%;
   transition: transform $duration-fast;
 
-  input:checked + .toggleTrack > & { transform: translateX(16px); }
+  input:checked + .toggleTrack > & {
+    transform: translateX(16px);
+  }
 }
 
 .toggleLabel {
@@ -266,11 +354,21 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

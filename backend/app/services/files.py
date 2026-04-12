@@ -1,4 +1,3 @@
-import mimetypes
 import os
 import shutil
 import stat as stat_module
@@ -34,13 +33,15 @@ def list_dir(rel_path: str) -> dict:
             fp = os.path.join(full, name)
             try:
                 st = os.stat(fp)
-                items.append({
-                    "name": name,
-                    "is_dir": os.path.isdir(fp),
-                    "size": st.st_size if not os.path.isdir(fp) else 0,
-                    "modified": st.st_mtime,
-                    "permissions": stat_module.filemode(st.st_mode),
-                })
+                items.append(
+                    {
+                        "name": name,
+                        "is_dir": os.path.isdir(fp),
+                        "size": st.st_size if not os.path.isdir(fp) else 0,
+                        "modified": st.st_mtime,
+                        "permissions": stat_module.filemode(st.st_mode),
+                    }
+                )
             except OSError:
                 items.append({"name": name, "is_dir": False, "size": 0, "modified": 0, "permissions": "?"})
     except PermissionError:

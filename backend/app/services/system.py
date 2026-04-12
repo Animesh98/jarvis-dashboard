@@ -1,9 +1,8 @@
-import asyncio
 import os
 import shutil
 import subprocess
-import time
 import threading
+import time
 from pathlib import Path
 
 import httpx
@@ -43,16 +42,21 @@ def get_system_stats() -> dict:
                     info[key.strip()] = int(val.strip().split()[0])
         total = info.get("MemTotal", 1)
         avail = info.get("MemAvailable", 0)
-        result["memory"] = {"total_kb": total, "available_kb": avail,
-                            "used_percent": round((total - avail) / total * 100, 1)}
+        result["memory"] = {
+            "total_kb": total,
+            "available_kb": avail,
+            "used_percent": round((total - avail) / total * 100, 1),
+        }
     except Exception:
         result["memory"] = {"total_kb": 0, "available_kb": 0, "used_percent": 0}
     try:
         usage = shutil.disk_usage("/")
-        result["disk"] = {"total_gb": round(usage.total / 1073741824, 1),
-                          "used_gb": round(usage.used / 1073741824, 1),
-                          "free_gb": round(usage.free / 1073741824, 1),
-                          "used_percent": round(usage.used / usage.total * 100, 1)}
+        result["disk"] = {
+            "total_gb": round(usage.total / 1073741824, 1),
+            "used_gb": round(usage.used / 1073741824, 1),
+            "free_gb": round(usage.free / 1073741824, 1),
+            "used_percent": round(usage.used / usage.total * 100, 1),
+        }
     except Exception:
         result["disk"] = {"total_gb": 0, "used_gb": 0, "free_gb": 0, "used_percent": 0}
     try:
@@ -62,8 +66,10 @@ def get_system_stats() -> dict:
             hours, rem = divmod(rem, 3600)
             mins = rem // 60
             parts = []
-            if days: parts.append(f"{days}d")
-            if hours: parts.append(f"{hours}h")
+            if days:
+                parts.append(f"{days}d")
+            if hours:
+                parts.append(f"{hours}h")
             parts.append(f"{mins}m")
             result["uptime_seconds"] = secs
             result["uptime_human"] = " ".join(parts)
@@ -75,26 +81,36 @@ def get_system_stats() -> dict:
 
 def get_processes() -> dict:
     try:
-        r = subprocess.run(["ps", "aux", "--sort=-%cpu"],
-                           capture_output=True, text=True, timeout=5)
+        r = subprocess.run(["ps", "aux", "--sort=-%cpu"], capture_output=True, text=True, timeout=5)
         lines = r.stdout.strip().split("\n")[1:11]
         by_cpu = []
         for line in lines:
             parts = line.split(None, 10)
             if len(parts) >= 11:
-                by_cpu.append({"user": parts[0], "pid": int(parts[1]),
-                               "cpu": float(parts[2]), "mem": float(parts[3]),
-                               "command": parts[10][:80]})
-        r2 = subprocess.run(["ps", "aux", "--sort=-%mem"],
-                            capture_output=True, text=True, timeout=5)
+                by_cpu.append(
+                    {
+                        "user": parts[0],
+                        "pid": int(parts[1]),
+                        "cpu": float(parts[2]),
+                        "mem": float(parts[3]),
+                        "command": parts[10][:80],
+                    }
+                )
+        r2 = subprocess.run(["ps", "aux", "--sort=-%mem"], capture_output=True, text=True, timeout=5)
         lines2 = r2.stdout.strip().split("\n")[1:11]
         by_mem = []
         for line in lines2:
             parts = line.split(None, 10)
             if len(parts) >= 11:
-                by_mem.append({"user": parts[0], "pid": int(parts[1]),
-                               "cpu": float(parts[2]), "mem": float(parts[3]),
-                               "command": parts[10][:80]})
+                by_mem.append(
+                    {
+                        "user": parts[0],
+                        "pid": int(parts[1]),
+                        "cpu": float(parts[2]),
+                        "mem": float(parts[3]),
+                        "command": parts[10][:80],
+                    }
+                )
         return {"by_cpu": by_cpu, "by_mem": by_mem}
     except Exception as e:
         return {"error": str(e)}
@@ -117,8 +133,7 @@ def get_storage() -> dict:
         for d in sorted(media.iterdir()):
             if d.is_dir():
                 try:
-                    r = subprocess.run(["du", "-sb", str(d)],
-                                       capture_output=True, text=True, timeout=60)
+                    r = subprocess.run(["du", "-sb", str(d)], capture_output=True, text=True, timeout=60)
                     if r.returncode == 0:
                         size = int(r.stdout.split()[0])
                         result["dirs"].append({"name": d.name, "size_bytes": size})
@@ -127,8 +142,7 @@ def get_storage() -> dict:
     dl = Path("/data/downloads")
     if dl.exists():
         try:
-            r = subprocess.run(["du", "-sb", str(dl)],
-                               capture_output=True, text=True, timeout=60)
+            r = subprocess.run(["du", "-sb", str(dl)], capture_output=True, text=True, timeout=60)
             if r.returncode == 0:
                 size = int(r.stdout.split()[0])
                 result["dirs"].append({"name": "downloads", "size_bytes": size})
@@ -174,20 +188,20 @@ def get_bandwidth_history() -> list:
 
 def start_bandwidth_collector(qbit_request_fn):
     """Start background thread that polls qBittorrent transfer info every 5s."""
+
     def _collector():
         while True:
             try:
                 data = qbit_request_fn("/transfer/info")
                 if data and not data.get("error"):
-                    entry = {"ts": time.time(),
-                             "dl": data.get("dl_info_speed", 0),
-                             "ul": data.get("up_info_speed", 0)}
+                    entry = {"ts": time.time(), "dl": data.get("dl_info_speed", 0), "ul": data.get("up_info_speed", 0)}
                     with _bw_lock:
                         bw_history.append(entry)
                         if len(bw_history) > _BW_MAX:
-                            del bw_history[:len(bw_history) - _BW_MAX]
+                            del bw_history[: len(bw_history) - _BW_MAX]
             except Exception:
                 pass
             time.sleep(5)
+
     t = threading.Thread(target=_collector, daemon=True)
     t.start()
