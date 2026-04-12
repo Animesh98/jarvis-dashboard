@@ -78,3 +78,44 @@
   gap: $space-xs;
   margin-top: $space-xs;
 }
+
+.tableWrapper {
+  @include card;
+  overflow-x: auto;
+  animation: fadeIn $duration-normal $ease-smooth both;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $text-sm;
+
+  th, td {
+    padding: $space-md $space-lg;
+    text-align: left;
+    border-bottom: 1px solid var(--row-border);
+    white-space: nowrap;
+  }
+
+  th {
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    font-size: $text-xs;
+    letter-spacing: 0.05em;
+    background: var(--bg-hover);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background: var(--bg-hover);
+  }
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+}

@@ -14,12 +14,13 @@ export interface DashboardData {
   sessions: any[]
   procs: any
   bw: any[]
+  images: any[]
   storage: any
   weather: any
 }
 
 const empty: DashboardData = {
-  sys: null, containers: [], stats: [], torrents: [], transfer: null,
+  sys: null, containers: [], stats: [], images: [], torrents: [], transfer: null,
   counts: null, latest: [], sessions: [], procs: null, bw: [],
   storage: null, weather: null,
 }
@@ -50,6 +51,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       api('/api/jellyfin/sessions'),
       api('/api/processes'),
       api('/api/bandwidth/history'),
+      api('/api/docker/images'),
     ])
     if (!mountedRef.current) return
     const v = (r: PromiseSettledResult<any>) => r.status === 'fulfilled' ? r.value.data : null
@@ -60,6 +62,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       transfer: v(results[4]), counts: v(results[5]),
       latest: v(results[6]) || [], sessions: v(results[7]) || [],
       procs: v(results[8]), bw: v(results[9]) || [],
+      images: v(results[10]) || [],
     }))
   }, [])
 

@@ -88,6 +88,25 @@ def get_logs(container: str, lines: int = 100) -> dict:
         return {"error": str(e)}
 
 
+def get_images() -> dict | list:
+    try:
+        r = subprocess.run(
+            ["docker", "images", "--format", "{{json .}}"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if r.returncode != 0:
+            return {"error": f"docker images failed: {r.stderr.strip()}"}
+        return [
+            json.loads(line) for line in r.stdout.strip().split("\n") if line.strip()
+        ]
+    except subprocess.TimeoutExpired:
+        return {"error": "docker images timed out"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 def prune() -> dict:
     try:
         r = subprocess.run(

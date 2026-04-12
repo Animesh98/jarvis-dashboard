@@ -16,6 +16,11 @@ def get_containers():
     return docker_svc.get_containers()
 
 
+@router.get("/images")
+def get_images():
+    return docker_svc.get_images()
+
+
 @router.get("/stats")
 def get_stats():
     return docker_svc.get_stats()
