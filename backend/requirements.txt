@@ -6,3 +6,4 @@ python-dotenv==1.1.0
 yt-dlp==2026.3.17
 cachetools==6.0.0
 markdown==3.7
+ptyprocess==0.7.0

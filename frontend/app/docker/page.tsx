@@ -4,15 +4,17 @@ import { useState, lazy, Suspense } from 'react'
 import { useData } from '@/lib/DataContext'
 import { api, colorForPercent } from '@/lib/api'
 import { toast } from '@/lib/toast'
-import { RotateCcw, Square, Play, ScrollText } from 'lucide-react'
+import { RotateCcw, Square, Play, ScrollText, Terminal as TerminalIcon } from 'lucide-react'
 import styles from './page.module.scss'
 
 const LogPanel = lazy(() => import('@/components/LogPanel'))
+const TerminalPanel = lazy(() => import('@/components/TerminalPanel'))
 
 export default function DockerPage() {
   const { data, refreshFast } = useData()
   const { containers, stats } = data
   const [logContainer, setLogContainer] = useState<string | null>(null)
+  const [terminalContainer, setTerminalContainer] = useState<string | null>(null)
 
   const statsMap: Record<string, any> = {}
   if (Array.isArray(stats)) stats.forEach(s => { statsMap[s.Name] = s })
@@ -66,6 +68,9 @@ export default function DockerPage() {
                   <button className={styles.logBtn} onClick={() => setLogContainer(name)} title="View logs">
                     <ScrollText size={13} />
                   </button>
+                  <button className={styles.logBtn} onClick={() => setTerminalContainer(name)} title="Open terminal">
+                    <TerminalIcon size={13} />
+                  </button>
                 </div>
                 <div className={styles.containerStatus}>{co.Status || state}</div>
 
@@ -105,6 +110,7 @@ export default function DockerPage() {
 
       <Suspense fallback={null}>
         {logContainer && <LogPanel container={logContainer} onClose={() => setLogContainer(null)} />}
+        {terminalContainer && <TerminalPanel container={terminalContainer} onClose={() => setTerminalContainer(null)} />}
       </Suspense>
     </>
   )

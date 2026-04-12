@@ -1,0 +1,98 @@
+@use "@/styles/variables" as *;
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity $duration-normal;
+
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: 90vw;
+  max-width: 900px;
+  height: 80vh;
+  background: #000;
+  border: 1px solid var(--glass-border);
+  border-radius: $radius-lg;
+  box-shadow: var(--glass-shadow-lg);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: all $duration-normal $ease-spring;
+
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  @include mobile {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    max-width: none;
+  }
+}
+
+.header {
+  padding: $space-md $space-xl;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111;
+}
+
+.title {
+  font-size: $text-sm;
+  font-weight: 600;
+  color: #fff;
+  font-family: $font-mono;
+}
+
+.close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity $duration-fast;
+  &:hover { opacity: 1; }
+}
+
+.terminalContainer {
+  flex: 1;
+  padding: $space-md;
+  background: #000;
+  min-height: 0;
+  
+  :global {
+    .xterm {
+      padding: $space-xs;
+      height: 100%;
+    }
+    .xterm-viewport {
+      background-color: #000 !important;
+    }
+  }
+}

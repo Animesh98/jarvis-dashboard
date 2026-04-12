@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, WebSocket
 from pydantic import BaseModel
 
 from app.services import docker as docker_svc
@@ -29,3 +29,8 @@ def get_logs(container: str = "", lines: int = 100):
 @router.post("/action")
 def do_action(body: DockerActionRequest):
     return docker_svc.action(body.container, body.action)
+
+
+@router.websocket("/terminal/{container}")
+async def terminal_endpoint(websocket: WebSocket, container: str):
+    await docker_svc.start_terminal(websocket, container)
