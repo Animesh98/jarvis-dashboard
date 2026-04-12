@@ -96,14 +96,16 @@ The backend follows a standard FastAPI project structure — routers for each AP
 
 ### Docker (recommended)
 
+You only need the `docker-compose.yml` file to run Jarvis Dashboard.
+
 ```bash
-git clone https://github.com/Animesh98/jarvis-dashboard.git
-cd jarvis-dashboard
-
+# Download docker-compose.yml (or clone the repo)
+curl -O https://raw.githubusercontent.com/Animesh98/jarvis-dashboard/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/Animesh98/jarvis-dashboard/main/.env.example
 cp .env.example .env
-# Edit .env with your keys (see Configuration below)
 
-docker compose up -d --build
+# Edit .env with your keys
+# docker compose up -d
 ```
 
 Open `http://localhost:3000`. API docs at `http://localhost:8002/docs`.
