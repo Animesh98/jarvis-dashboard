@@ -1,6 +1,9 @@
 services:
   backend:
-    image: ghcr.io/animesh98/jarvis-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: jarvis-backend:local
     container_name: jarvis-backend
     restart: unless-stopped
     env_file: .env
@@ -15,7 +18,12 @@ services:
       - "8002:8002"
 
   frontend:
-    image: ghcr.io/animesh98/jarvis-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - BACKEND_URL=http://backend:8002
+    image: jarvis-frontend:local
     container_name: jarvis-frontend
     restart: unless-stopped
     depends_on:
