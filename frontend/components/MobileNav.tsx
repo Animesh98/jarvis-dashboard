@@ -13,24 +13,30 @@ import {
   Sparkles,
   SquareCheckBig,
 } from 'lucide-react';
+import { useEnabledFeatures, type Feature } from '@/lib/features';
 
-const items = [
-  { href: '/', label: 'Home', Icon: LayoutGrid },
-  { href: '/system', label: 'System', Icon: Cpu },
-  { href: '/docker', label: 'Docker', Icon: Container },
-  { href: '/torrents', label: 'Torrents', Icon: ArrowDownUp },
-  { href: '/media', label: 'Media', Icon: Film },
-  { href: '/discover', label: 'Discover', Icon: Sparkles },
-  { href: '/files', label: 'Files', Icon: FolderOpen },
-  { href: '/tasks', label: 'Tasks', Icon: SquareCheckBig },
+const items: { href: string; label: string; Icon: typeof LayoutGrid; feature: Feature | null }[] = [
+  { href: '/', label: 'Home', Icon: LayoutGrid, feature: null },
+  { href: '/system', label: 'System', Icon: Cpu, feature: 'system' },
+  { href: '/docker', label: 'Docker', Icon: Container, feature: 'docker' },
+  { href: '/torrents', label: 'Torrents', Icon: ArrowDownUp, feature: 'torrents' },
+  { href: '/media', label: 'Media', Icon: Film, feature: 'media' },
+  { href: '/discover', label: 'Discover', Icon: Sparkles, feature: 'discover' },
+  { href: '/files', label: 'Files', Icon: FolderOpen, feature: 'files' },
+  { href: '/tasks', label: 'Tasks', Icon: SquareCheckBig, feature: 'tasks' },
 ];
 
 export default memo(function MobileNav() {
   const pathname = usePathname();
+  const features = useEnabledFeatures();
+
+  const visibleItems = items.filter(
+    ({ feature }) => feature === null || !features || features.has(feature)
+  );
 
   return (
     <nav className="mobile-nav">
-      {items.map(({ href, label, Icon }) => (
+      {visibleItems.map(({ href, label, Icon }) => (
         <Link
           key={href}
           href={href}

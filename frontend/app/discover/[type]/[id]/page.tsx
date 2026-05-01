@@ -187,11 +187,6 @@ export default function MovieDetailPage() {
     in_library: boolean;
     jellyfin_id?: string;
   } | null>(null);
-  const [streamInfo, setStreamInfo] = useState<{
-    available: boolean;
-    show_id?: string;
-    name?: string;
-  } | null>(null);
   const [ytInfo, setYtInfo] = useState<{
     available: boolean;
     url?: string;
@@ -222,12 +217,6 @@ export default function MovieDetailPage() {
           `/api/jellyfin-media/library-check?tmdb_id=${id}&media_type=${type}`
         ).then((lib) => {
           if (lib.data) setLibraryInfo(lib.data);
-        });
-
-        api<{ available: boolean; show_id?: string; name?: string }>(
-          `/api/streaming/check?title=${encodeURIComponent(r.data.title)}&type=${type}`
-        ).then((stream) => {
-          if (stream.data) setStreamInfo(stream.data);
         });
 
         api<{ in_watchlist: boolean; category: string | null }>(
@@ -439,20 +428,10 @@ export default function MovieDetailPage() {
                     <a
                       href={`http://${window.location.hostname}:8096/web/#/details?id=${libraryInfo.jellyfin_id}`}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel="noopener"
                       className={`btn ${styles.playBtn}`}
                     >
                       <Play size={14} /> Play on Jellyfin
-                    </a>
-                  )}
-                  {streamInfo?.available && streamInfo.show_id && (
-                    <a
-                      href={`https://allmanga.to/bangumi/${streamInfo.show_id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`btn ${styles.streamBtn}`}
-                    >
-                      <Play size={14} /> Stream
                     </a>
                   )}
                   {ytInfo?.available && ytInfo.url && (

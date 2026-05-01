@@ -14,21 +14,29 @@ import {
   SquareCheckBig,
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useEnabledFeatures, type Feature } from '@/lib/features';
 
-const navItems = [
-  { href: '/', label: 'Overview', Icon: LayoutGrid },
-  { href: '/system', label: 'System', Icon: Cpu },
-  { href: '/docker', label: 'Docker', Icon: Container },
-  { href: '/torrents', label: 'Torrents', Icon: ArrowDownUp },
-  { href: '/media', label: 'Media', Icon: Film },
-  { href: '/discover', label: 'Discover', Icon: Sparkles },
-  { href: '/files', label: 'Files', Icon: FolderOpen },
-  { href: '/tasks', label: 'Tasks', Icon: SquareCheckBig },
+// `feature: null` means "always show" (Overview has no toggle).
+const navItems: {
+  href: string;
+  label: string;
+  Icon: typeof LayoutGrid;
+  feature: Feature | null;
+}[] = [
+  { href: '/', label: 'Overview', Icon: LayoutGrid, feature: null },
+  { href: '/system', label: 'System', Icon: Cpu, feature: 'system' },
+  { href: '/docker', label: 'Docker', Icon: Container, feature: 'docker' },
+  { href: '/torrents', label: 'Torrents', Icon: ArrowDownUp, feature: 'torrents' },
+  { href: '/media', label: 'Media', Icon: Film, feature: 'media' },
+  { href: '/discover', label: 'Discover', Icon: Sparkles, feature: 'discover' },
+  { href: '/files', label: 'Files', Icon: FolderOpen, feature: 'files' },
+  { href: '/tasks', label: 'Tasks', Icon: SquareCheckBig, feature: 'tasks' },
 ];
 
 export default memo(function TopNav() {
   const pathname = usePathname();
   const [clock, setClock] = useState('');
+  const features = useEnabledFeatures();
 
   useEffect(() => {
     const tick = () => setClock(new Date().toLocaleTimeString('en-GB', { hour12: false }));
@@ -36,6 +44,11 @@ export default memo(function TopNav() {
     const t = setInterval(tick, 1000);
     return () => clearInterval(t);
   }, []);
+
+  // Until features load, render everything (fail-open) — matches pre-flag behavior.
+  const visibleItems = navItems.filter(
+    ({ feature }) => feature === null || !features || features.has(feature)
+  );
 
   return (
     <header className="topnav">
@@ -45,7 +58,7 @@ export default memo(function TopNav() {
       </Link>
 
       <nav className="topnav-links">
-        {navItems.map(({ href, label, Icon }) => (
+        {visibleItems.map(({ href, label, Icon }) => (
           <Link
             key={href}
             href={href}

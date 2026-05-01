@@ -40,11 +40,14 @@ def tmdb_image_proxy(path: str):
 async def lifespan(app: FastAPI):
     # Init database
     db_svc.init_db()
-    # Start bandwidth collector (polls torrent client every 5s)
-    if settings.torrent_client == "transmission":
-        system_svc.start_bandwidth_collector(lambda _path: trans_svc.get_transfer_info())
-    else:
-        system_svc.start_bandwidth_collector(qbit_svc.request)
+    # Start bandwidth collector (polls torrent client every 5s) — only if both
+    # system and torrent features are enabled. Otherwise the collector would
+    # spam failed auth calls for nothing.
+    if settings.feature_enabled("system") and settings.feature_enabled("torrents"):
+        if settings.torrent_client == "transmission":
+            system_svc.start_bandwidth_collector(lambda _path: trans_svc.get_transfer_info())
+        else:
+            system_svc.start_bandwidth_collector(qbit_svc.request)
     # Prefetch storage cache
     threading.Thread(target=system_svc.get_storage, daemon=True).start()
     print(f"Jarvis Dashboard running on http://{settings.host}:{settings.port}")
@@ -62,17 +65,34 @@ app = FastAPI(
 # See middleware.py for how localhost vs external is handled
 app.add_middleware(APIKeyMiddleware)
 
-app.include_router(system.router)
-app.include_router(docker.router)
-app.include_router(torrents.router)
-app.include_router(media.router)
+# Feature flags — optional modules the user can disable during setup.
+# Discover / actions / watchlist / streaming / tmdb-image are always on
+# because they back the primary movie-discovery flow.
+_features = settings.feature_set()
+
+if settings.feature_enabled("system"):
+    app.include_router(system.router)
+if settings.feature_enabled("docker"):
+    app.include_router(docker.router)
+if settings.feature_enabled("torrents"):
+    app.include_router(torrents.router)
+if settings.feature_enabled("media"):
+    app.include_router(media.router)
 app.include_router(recommendations.router)
-app.include_router(files.router)
+if settings.feature_enabled("files"):
+    app.include_router(files.router)
 app.include_router(actions.router)
 app.include_router(streaming.router)
-app.include_router(tasks.router)
+if settings.feature_enabled("tasks"):
+    app.include_router(tasks.router)
 app.include_router(watchlist.router)
 app.include_router(_tmdb_img_router)
+
+
+@app.get("/api/config/features")
+def get_enabled_features():
+    """Lightweight endpoint so the frontend can hide disabled nav tabs."""
+    return {"features": sorted(_features)}
 
 
 @app.get("/docs/report")
