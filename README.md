@@ -94,39 +94,45 @@ The backend follows a standard FastAPI project structure — routers for each AP
 
 ## Getting Started
 
-### Docker (recommended)
+### One command
 
 ```bash
 git clone https://github.com/Animesh98/jarvis-dashboard.git
 cd jarvis-dashboard
-
-cp .env.example .env
-# Edit .env with your keys (see Configuration below)
-
-docker compose up -d --build
+./setup.sh run          # interactive setup + native launch
+# or
+./setup.sh run docker   # interactive setup + docker compose up
 ```
+
+`./setup.sh` walks you through picking which features to enable (Discover is always on; Docker, Torrents, Media, System, Files, Tasks are opt-in), collects only the credentials those features need, and writes `.env`. Re-running is safe — existing values become the defaults.
 
 Open `http://localhost:3000`. API docs at `http://localhost:8002/docs`.
 
-### Bare metal
+### Just configure (no launch)
+
+```bash
+./setup.sh              # writes .env only
+```
+
+### Manual (bare metal)
+
+If you'd rather skip the CLI:
 
 ```bash
 cp .env.example .env
 # Edit .env with your keys (see Configuration below)
 
-# Backend
 cd backend
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8002 &
 
-# Frontend
 cd ../frontend && npm install && npm run build && npm start
 ```
 
 ### Configuration
 
-Copy `.env.example` to `.env` and set your values:
+`./setup.sh` writes this for you. If editing by hand, copy `.env.example` to `.env` and set:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -143,6 +149,7 @@ Copy `.env.example` to `.env` and set your values:
 | `JELLYFIN_BASE` | No | Jellyfin URL (default: `http://localhost:8096`) |
 | `WEATHER_CITY` | No | City name for weather widget |
 | `API_KEY` | No | Protects backend from non-localhost callers (see [Authentication](#authentication)) |
+| `ENABLED_FEATURES` | No | Comma-separated list of features to enable. Defaults to `all`. Recognized: `system,docker,torrents,media,discover,files,tasks`. `discover` is always on. |
 
 **Requirements (bare metal):** Python 3.10+, Node.js 18+, Docker engine, Jellyfin, and Transmission or qBittorrent accessible on the local network.
 
