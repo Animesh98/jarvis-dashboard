@@ -209,5 +209,5 @@ def _resolve_ids(hashes: list[str]) -> list[int]:
     if resp.get("error"):
         return []
     all_t = resp.get("arguments", {}).get("torrents", [])
-    hash_set = set(h.lower() for h in hashes)
+    hash_set = {h.lower() for h in hashes}
     return [t["id"] for t in all_t if t.get("hashString", "").lower() in hash_set]
