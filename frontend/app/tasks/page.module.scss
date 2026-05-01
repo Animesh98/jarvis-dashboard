@@ -29,7 +29,7 @@
   background: rgba($blue, 0.08);
   border: 1px solid rgba($blue, 0.18);
 
-  :global([data-theme="light"]) & {
+  :global([data-theme='light']) & {
     background: rgba($blue, 0.05);
     border-color: rgba($blue, 0.12);
   }
@@ -38,7 +38,7 @@
   background: rgba($orange, 0.08);
   border: 1px solid rgba($orange, 0.18);
 
-  :global([data-theme="light"]) & {
+  :global([data-theme='light']) & {
     background: rgba($orange, 0.05);
     border-color: rgba($orange, 0.12);
   }
@@ -47,7 +47,7 @@
   background: rgba($green, 0.08);
   border: 1px solid rgba($green, 0.18);
 
-  :global([data-theme="light"]) & {
+  :global([data-theme='light']) & {
     background: rgba($green, 0.05);
     border-color: rgba($green, 0.12);
   }
@@ -89,9 +89,15 @@
   flex-shrink: 0;
 }
 
-.dotTodo { background: $blue; }
-.dotProgress { background: $orange; }
-.dotDone { background: $green; }
+.dotTodo {
+  background: $blue;
+}
+.dotProgress {
+  background: $orange;
+}
+.dotDone {
+  background: $green;
+}
 
 .columnActions {
   display: flex;
@@ -106,7 +112,9 @@
   padding: 4px !important;
   cursor: pointer;
   border-radius: $radius-sm;
-  transition: color $duration-fast, background $duration-fast;
+  transition:
+    color $duration-fast,
+    background $duration-fast;
   display: flex;
   align-items: center;
 
@@ -124,7 +132,9 @@
   flex: 1;
   padding: $space-xs;
   border-radius: $radius-md;
-  transition: background $duration-normal, outline-color $duration-normal;
+  transition:
+    background $duration-normal,
+    outline-color $duration-normal;
   min-height: 48px;
 }
 
@@ -139,13 +149,16 @@
   @include card;
   padding: $space-sm $space-md $space-sm $space-xs;
   user-select: text;
-  transition: transform $duration-fast $ease-smooth, box-shadow $duration-normal, border-color $duration-normal, opacity $duration-fast;
+  transition:
+    transform $duration-fast $ease-smooth,
+    box-shadow $duration-normal,
+    border-color $duration-normal,
+    opacity $duration-fast;
 
   &:hover {
     border-color: var(--card-hover-border);
     box-shadow: var(--glass-shadow-lg);
   }
-
 }
 
 .taskBody {
@@ -160,10 +173,16 @@
   cursor: grab;
   color: var(--text-tertiary);
   opacity: 0.4;
-  transition: opacity $duration-fast, color $duration-fast;
+  transition:
+    opacity $duration-fast,
+    color $duration-fast;
 
-  .task:hover & { opacity: 0.8; }
-  &:active { cursor: grabbing; }
+  .task:hover & {
+    opacity: 0.8;
+  }
+  &:active {
+    cursor: grabbing;
+  }
 }
 
 .taskMain {
@@ -180,7 +199,9 @@
   @include card;
   padding: $space-md;
   cursor: grabbing;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba($blue, 0.2);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba($blue, 0.2);
   border-color: rgba($blue, 0.3);
   transform: rotate(1.5deg) scale(1.03);
 }
@@ -225,7 +246,9 @@
   gap: 2px;
   opacity: 0;
   transition: opacity $duration-fast;
-  .task:hover & { opacity: 1; }
+  .task:hover & {
+    opacity: 1;
+  }
 }
 
 .taskActionBtn {
@@ -235,7 +258,9 @@
   padding: 3px !important;
   cursor: pointer;
   border-radius: 6px;
-  transition: color $duration-fast, background $duration-fast;
+  transition:
+    color $duration-fast,
+    background $duration-fast;
   display: flex;
   align-items: center;
 
@@ -294,7 +319,10 @@
   border-radius: $radius-sm;
   display: flex;
   align-items: center;
-  transition: color $duration-fast, background $duration-fast, border-color $duration-fast;
+  transition:
+    color $duration-fast,
+    background $duration-fast,
+    border-color $duration-fast;
 
   &:hover {
     color: var(--text-primary) !important;
@@ -327,7 +355,10 @@
   font-size: $text-xs;
   font-family: $font-sans;
   cursor: pointer;
-  transition: color $duration-fast, border-color $duration-fast, background $duration-fast;
+  transition:
+    color $duration-fast,
+    border-color $duration-fast,
+    background $duration-fast;
 
   &:hover {
     color: var(--text-secondary);
@@ -351,7 +382,9 @@
   transition: background $duration-fast;
   cursor: pointer;
   vertical-align: middle;
-  &:hover { background: rgba($blue, 0.2); }
+  &:hover {
+    background: rgba($blue, 0.2);
+  }
 }
 
 // Add task form
@@ -374,7 +407,9 @@
   width: 100%;
   resize: none;
   line-height: 1.5;
-  &::placeholder { color: var(--text-tertiary); }
+  &::placeholder {
+    color: var(--text-tertiary);
+  }
 }
 
 .addFormActions {
@@ -421,7 +456,10 @@
   color: var(--text-primary);
   cursor: pointer;
   transition: background $duration-fast;
-  &:hover, &[data-active="true"] { background: var(--bg-hover); }
+  &:hover,
+  &[data-active='true'] {
+    background: var(--bg-hover);
+  }
 }
 
 .autocompleteType {
@@ -454,7 +492,9 @@
   padding: 4px !important;
   cursor: pointer;
   border-radius: $radius-sm;
-  transition: color $duration-fast, background $duration-fast;
+  transition:
+    color $duration-fast,
+    background $duration-fast;
   display: flex;
   align-items: center;
 
@@ -477,7 +517,10 @@
   padding: 4px 10px !important;
   border-radius: $radius-md;
   cursor: pointer;
-  transition: color $duration-fast, border-color $duration-fast, background $duration-fast;
+  transition:
+    color $duration-fast,
+    border-color $duration-fast,
+    background $duration-fast;
   white-space: nowrap;
 
   &:hover {
@@ -505,7 +548,10 @@
   padding: 3px 8px !important;
   border-radius: $radius-sm;
   cursor: pointer;
-  transition: color $duration-fast, border-color $duration-fast, background $duration-fast;
+  transition:
+    color $duration-fast,
+    border-color $duration-fast,
+    background $duration-fast;
   margin-left: 2px;
 
   &:hover {
@@ -529,8 +575,14 @@
 }
 
 @keyframes calendarIn {
-  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .calendarHeader {
@@ -549,7 +601,9 @@
   border-radius: $radius-sm;
   display: flex;
   align-items: center;
-  transition: color $duration-fast, background $duration-fast;
+  transition:
+    color $duration-fast,
+    background $duration-fast;
 
   &:hover {
     color: var(--text-primary) !important;
@@ -599,7 +653,9 @@
   border: none !important;
   border-radius: $radius-sm;
   cursor: pointer;
-  transition: background $duration-fast, color $duration-fast;
+  transition:
+    background $duration-fast,
+    color $duration-fast;
   padding: 0 !important;
 
   &:hover {
@@ -711,6 +767,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

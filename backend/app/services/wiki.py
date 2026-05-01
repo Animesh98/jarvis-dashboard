@@ -1,5 +1,4 @@
 import datetime
-import json
 import re
 import threading
 import time
@@ -10,11 +9,14 @@ _wiki_kb: dict = {"categories": {}, "top100": [], "ts": 0}
 _wiki_kb_lock = threading.Lock()
 _WIKI_KB_TTL = 86400
 
-_http = httpx.Client(timeout=20, headers={
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    "Accept": "application/json,text/html,*/*",
-    "Accept-Language": "en-US,en;q=0.5",
-})
+_http = httpx.Client(
+    timeout=20,
+    headers={
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json,text/html,*/*",
+        "Accept-Language": "en-US,en;q=0.5",
+    },
+)
 
 
 def _reddit_wiki_json(page: str) -> dict:
@@ -29,17 +31,17 @@ def _parse_wiki_movies(content_md: str) -> dict:
     current_top_category = None
 
     movie_re = re.compile(
-        r'\[([^\]]+?)\s*\((\d{4})\)\]\((https?://(?:www\.)?themoviedb\.org/(?:movie|tv)/(\d+)[^)]*)\)'
+        r"\[([^\]]+?)\s*\((\d{4})\)\]\((https?://(?:www\.)?themoviedb\.org/(?:movie|tv)/(\d+)[^)]*)\)"
     )
-    header_re = re.compile(r'^(#{1,4})\s*(.+)')
+    header_re = re.compile(r"^(#{1,4})\s*(.+)")
 
-    for line in content_md.split('\n'):
+    for line in content_md.split("\n"):
         header_match = header_re.match(line.strip())
         if header_match:
             level = len(header_match.group(1))
-            name = header_match.group(2).strip().rstrip('#').strip()
-            name = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', name)
-            name = re.sub(r'[*_`]', '', name).strip()
+            name = header_match.group(2).strip().rstrip("#").strip()
+            name = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", name)
+            name = re.sub(r"[*_`]", "", name).strip()
             if not name:
                 continue
             if level == 1:
@@ -52,14 +54,17 @@ def _parse_wiki_movies(content_md: str) -> dict:
             continue
 
         for match in movie_re.finditer(line):
-            title = re.sub(r'[*_`]', '', match.group(1)).strip()
+            title = re.sub(r"[*_`]", "", match.group(1)).strip()
             year = match.group(2)
             tmdb_url = match.group(3)
             tmdb_id = match.group(4)
             media_type = "series" if "/tv/" in tmdb_url else "movie"
             entry = {
-                "title": title, "year": year, "type": media_type,
-                "tmdb_id": tmdb_id, "tmdb_url": tmdb_url,
+                "title": title,
+                "year": year,
+                "type": media_type,
+                "tmdb_id": tmdb_id,
+                "tmdb_url": tmdb_url,
                 "category": current_category or "Uncategorized",
                 "torrent_query": f"{title} {year}".strip(),
             }
@@ -74,14 +79,12 @@ def _parse_wiki_movies(content_md: str) -> dict:
 def _parse_top100_movies(content_md: str) -> list:
     movies = []
     seen = set()
-    tmdb_re = re.compile(
-        r'\[([^\]]+?)\s*\((\d{4})\)\]\((https?://(?:www\.)?themoviedb\.org/(?:movie|tv)/(\d+)[^)]*)\)'
-    )
-    table_re = re.compile(r'\|\s*\d+\s*\|\s*(.+?)\s*\((\d{4})\)\s*\|')
+    tmdb_re = re.compile(r"\[([^\]]+?)\s*\((\d{4})\)\]\((https?://(?:www\.)?themoviedb\.org/(?:movie|tv)/(\d+)[^)]*)\)")
+    table_re = re.compile(r"\|\s*\d+\s*\|\s*(.+?)\s*\((\d{4})\)\s*\|")
 
-    for line in content_md.split('\n'):
+    for line in content_md.split("\n"):
         for match in tmdb_re.finditer(line):
-            title = re.sub(r'[*_`]', '', match.group(1)).strip()
+            title = re.sub(r"[*_`]", "", match.group(1)).strip()
             year = match.group(2)
             tmdb_url = match.group(3)
             tmdb_id = match.group(4)
@@ -89,24 +92,34 @@ def _parse_top100_movies(content_md: str) -> list:
             key = title.lower()
             if key not in seen:
                 seen.add(key)
-                movies.append({
-                    "title": title, "year": year, "type": media_type,
-                    "tmdb_id": tmdb_id, "tmdb_url": tmdb_url,
-                    "category": "Trending",
-                    "torrent_query": f"{title} {year}".strip(),
-                })
+                movies.append(
+                    {
+                        "title": title,
+                        "year": year,
+                        "type": media_type,
+                        "tmdb_id": tmdb_id,
+                        "tmdb_url": tmdb_url,
+                        "category": "Trending",
+                        "torrent_query": f"{title} {year}".strip(),
+                    }
+                )
         for match in table_re.finditer(line):
-            title = re.sub(r'[*_`]', '', match.group(1)).strip()
+            title = re.sub(r"[*_`]", "", match.group(1)).strip()
             year = match.group(2)
             key = title.lower()
             if key not in seen:
                 seen.add(key)
-                movies.append({
-                    "title": title, "year": year, "type": "movie",
-                    "tmdb_id": "", "tmdb_url": "",
-                    "category": "Trending",
-                    "torrent_query": f"{title} {year}".strip(),
-                })
+                movies.append(
+                    {
+                        "title": title,
+                        "year": year,
+                        "type": "movie",
+                        "tmdb_id": "",
+                        "tmdb_url": "",
+                        "category": "Trending",
+                        "torrent_query": f"{title} {year}".strip(),
+                    }
+                )
     return movies
 
 

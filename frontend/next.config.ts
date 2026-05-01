@@ -1,4 +1,4 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
@@ -11,8 +11,8 @@ const nextConfig: NextConfig = {
         source: '/api/:path*',
         destination: 'http://localhost:8002/api/:path*',
       },
-    ]
+    ];
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

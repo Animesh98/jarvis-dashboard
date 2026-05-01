@@ -7,10 +7,10 @@ import httpx
 from cachetools import TTLCache
 from fastapi import APIRouter
 
-from app.services import tmdb as tmdb_svc
-from app.services import wiki as wiki_svc
 from app.services import jellyfin as jellyfin_svc
 from app.services import ratings as ratings_svc
+from app.services import tmdb as tmdb_svc
+from app.services import wiki as wiki_svc
 
 router = APIRouter(prefix="/api/recommendations", tags=["recommendations"])
 
@@ -34,10 +34,25 @@ MOOD_CATEGORY_MAP = {
 }
 
 _TMDB_GENRE_MAP = {
-    "action": 28, "adventure": 12, "animation": 16, "comedy": 35, "crime": 80,
-    "documentary": 99, "drama": 18, "family": 10751, "fantasy": 14, "history": 36,
-    "horror": 27, "music": 10402, "mystery": 9648, "romance": 10749,
-    "science fiction": 878, "sci-fi": 878, "thriller": 53, "war": 10752, "western": 37,
+    "action": 28,
+    "adventure": 12,
+    "animation": 16,
+    "comedy": 35,
+    "crime": 80,
+    "documentary": 99,
+    "drama": 18,
+    "family": 10751,
+    "fantasy": 14,
+    "history": 36,
+    "horror": 27,
+    "music": 10402,
+    "mystery": 9648,
+    "romance": 10749,
+    "science fiction": 878,
+    "sci-fi": 878,
+    "thriller": 53,
+    "war": 10752,
+    "western": 37,
 }
 
 
@@ -58,20 +73,51 @@ def _google_search_titles(query: str, num: int = 10) -> list:
     seen = set()
     try:
         url = f"https://www.google.com/search?q={urllib.parse.quote(query + ' site:reddit.com')}&num={num}"
-        resp = httpx.get(url, headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "text/html,application/xhtml+xml",
-        }, timeout=15)
+        resp = httpx.get(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Accept": "text/html,application/xhtml+xml",
+            },
+            timeout=15,
+        )
         html_text = resp.text
-        title_year_re = re.findall(r'([A-Z][A-Za-z0-9\s\':&,!.\-]{2,40})\s*\((\d{4})\)', html_text)
+        title_year_re = re.findall(r"([A-Z][A-Za-z0-9\s\':&,!.\-]{2,40})\s*\((\d{4})\)", html_text)
         for name, year in title_year_re:
             name = name.strip().rstrip(" -\u2013,.")
             if len(name) < 2 or name.lower() in seen:
                 continue
-            if any(skip in name.lower() for skip in ["reddit", "imdb", "http", "edit", "update", "thread", "spoiler", "anyone", "looking for", "suggest", "recommend", "google", "search"]):
+            if any(
+                skip in name.lower()
+                for skip in [
+                    "reddit",
+                    "imdb",
+                    "http",
+                    "edit",
+                    "update",
+                    "thread",
+                    "spoiler",
+                    "anyone",
+                    "looking for",
+                    "suggest",
+                    "recommend",
+                    "google",
+                    "search",
+                ]
+            ):
                 continue
             seen.add(name.lower())
-            results.append({"title": name, "year": year, "type": "movie", "category": "", "tmdb_id": "", "tmdb_url": "", "torrent_query": f"{name} {year}".strip()})
+            results.append(
+                {
+                    "title": name,
+                    "year": year,
+                    "type": "movie",
+                    "category": "",
+                    "tmdb_id": "",
+                    "tmdb_url": "",
+                    "torrent_query": f"{name} {year}".strip(),
+                }
+            )
     except Exception:
         pass
     return results
@@ -93,21 +139,56 @@ def get_mood(mood: str = "", media_type: str = "movie"):
 
     if media_type == "tv":
         _TV_GENRE_MAP = {
-            "action": 10759, "adventure": 10759, "animation": 16, "comedy": 35,
-            "crime": 80, "documentary": 99, "drama": 18, "family": 10751,
-            "fantasy": 10765, "mystery": 9648, "science fiction": 10765,
-            "sci-fi": 10765, "war": 10768, "western": 37,
-            "thriller": 80, "horror": 9648, "romance": 18,
-            "suspense": 9648, "psychological thriller": 9648, "crime thriller": 80,
-            "noir": 80, "dark comedy": 35, "psychological": 9648,
-            "feel-good": 35, "comfort": 10751, "musical": 18,
-            "history": 18, "biography": 99, "true crime": 80,
-            "parody": 35, "satire": 35, "slapstick": 35,
-            "romantic comedy": 35, "rom-com": 35,
-            "military": 10768, "martial arts": 10759, "heist": 80, "spy": 10759,
-            "cyberpunk": 10765, "space": 10765, "dystopia": 10765, "time travel": 10765,
-            "slasher": 9648, "supernatural": 10765, "zombie": 10759, "gothic": 18,
-            "animated": 16, "anime": 16, "pixar": 16, "disney": 16,
+            "action": 10759,
+            "adventure": 10759,
+            "animation": 16,
+            "comedy": 35,
+            "crime": 80,
+            "documentary": 99,
+            "drama": 18,
+            "family": 10751,
+            "fantasy": 10765,
+            "mystery": 9648,
+            "science fiction": 10765,
+            "sci-fi": 10765,
+            "war": 10768,
+            "western": 37,
+            "thriller": 80,
+            "horror": 9648,
+            "romance": 18,
+            "suspense": 9648,
+            "psychological thriller": 9648,
+            "crime thriller": 80,
+            "noir": 80,
+            "dark comedy": 35,
+            "psychological": 9648,
+            "feel-good": 35,
+            "comfort": 10751,
+            "musical": 18,
+            "history": 18,
+            "biography": 99,
+            "true crime": 80,
+            "parody": 35,
+            "satire": 35,
+            "slapstick": 35,
+            "romantic comedy": 35,
+            "rom-com": 35,
+            "military": 10768,
+            "martial arts": 10759,
+            "heist": 80,
+            "spy": 10759,
+            "cyberpunk": 10765,
+            "space": 10765,
+            "dystopia": 10765,
+            "time travel": 10765,
+            "slasher": 9648,
+            "supernatural": 10765,
+            "zombie": 10759,
+            "gothic": 18,
+            "animated": 16,
+            "anime": 16,
+            "pixar": 16,
+            "disney": 16,
         }
         tv_ids = []
         for kw in cat_keywords:
@@ -251,7 +332,9 @@ def get_library():
         if isinstance(users_data, list) and users_data:
             user_id = users_data[0].get("Id", "")
         if user_id:
-            movies = jellyfin_svc.request(f"/Users/{user_id}/Items?IncludeItemTypes=Movie&Limit=50&SortBy=DatePlayed&SortOrder=Descending&Recursive=true&Fields=ProductionYear,ProviderIds,Genres")
+            movies = jellyfin_svc.request(
+                f"/Users/{user_id}/Items?IncludeItemTypes=Movie&Limit=50&SortBy=DatePlayed&SortOrder=Descending&Recursive=true&Fields=ProductionYear,ProviderIds,Genres"
+            )
             if isinstance(movies, dict) and "Items" in movies:
                 for item in movies["Items"]:
                     name = item.get("Name", "")
@@ -260,13 +343,19 @@ def get_library():
                     for g in item_genres:
                         genres.append(g)
                     providers = item.get("ProviderIds", {})
-                    library_items_raw.append({
-                        "title": name, "type": "movie", "genres": item_genres,
-                        "year": str(item.get("ProductionYear", "")),
-                        "tmdb_id": providers.get("Tmdb", ""),
-                        "imdb_id": providers.get("Imdb", ""),
-                    })
-            series = jellyfin_svc.request(f"/Users/{user_id}/Items?IncludeItemTypes=Series&Limit=30&SortBy=DatePlayed&SortOrder=Descending&Recursive=true&Fields=ProductionYear,ProviderIds,Genres")
+                    library_items_raw.append(
+                        {
+                            "title": name,
+                            "type": "movie",
+                            "genres": item_genres,
+                            "year": str(item.get("ProductionYear", "")),
+                            "tmdb_id": providers.get("Tmdb", ""),
+                            "imdb_id": providers.get("Imdb", ""),
+                        }
+                    )
+            series = jellyfin_svc.request(
+                f"/Users/{user_id}/Items?IncludeItemTypes=Series&Limit=30&SortBy=DatePlayed&SortOrder=Descending&Recursive=true&Fields=ProductionYear,ProviderIds,Genres"
+            )
             if isinstance(series, dict) and "Items" in series:
                 for item in series["Items"]:
                     name = item.get("Name", "")
@@ -275,12 +364,16 @@ def get_library():
                     for g in item_genres:
                         genres.append(g)
                     providers = item.get("ProviderIds", {})
-                    library_items_raw.append({
-                        "title": name, "type": "series", "genres": item_genres,
-                        "year": str(item.get("ProductionYear", "")),
-                        "tmdb_id": providers.get("Tmdb", ""),
-                        "imdb_id": providers.get("Imdb", ""),
-                    })
+                    library_items_raw.append(
+                        {
+                            "title": name,
+                            "type": "series",
+                            "genres": item_genres,
+                            "year": str(item.get("ProductionYear", "")),
+                            "tmdb_id": providers.get("Tmdb", ""),
+                            "imdb_id": providers.get("Imdb", ""),
+                        }
+                    )
     except Exception:
         pass
 
@@ -302,8 +395,10 @@ def get_library():
             if data and data.get("id"):
                 poster = f"/api/tmdb-image/w300{data['poster_path']}" if data.get("poster_path") else ""
                 return {
-                    "title": item["title"], "year": year or (data.get("release_date") or data.get("first_air_date") or "")[:4],
-                    "type": item["type"], "poster": poster,
+                    "title": item["title"],
+                    "year": year or (data.get("release_date") or data.get("first_air_date") or "")[:4],
+                    "type": item["type"],
+                    "poster": poster,
                     "tmdb_id": str(tmdb_id),
                     "rating": str(round(data.get("vote_average", 0), 1)),
                     "description": (data.get("overview") or "")[:150],
@@ -312,6 +407,7 @@ def get_library():
                 }
 
         import urllib.parse as up
+
         if year:
             query_param = f"/search/{kind}?query={up.quote(item['title'])}&year={year}"
         else:
@@ -322,17 +418,26 @@ def get_library():
             poster = f"/api/tmdb-image/w300{first['poster_path']}" if first.get("poster_path") else ""
             found_year = year or (first.get("release_date") or first.get("first_air_date") or "")[:4]
             return {
-                "title": item["title"], "year": found_year, "type": item["type"],
-                "poster": poster, "tmdb_id": str(first.get("id", "")),
+                "title": item["title"],
+                "year": found_year,
+                "type": item["type"],
+                "poster": poster,
+                "tmdb_id": str(first.get("id", "")),
                 "rating": str(round(first.get("vote_average", 0), 1)),
                 "description": (first.get("overview") or "")[:150],
                 "genres": item["genres"],
                 "torrent_query": f"{item['title']} {found_year}".strip(),
             }
         return {
-            "title": item["title"], "year": year, "type": item["type"],
-            "poster": "", "tmdb_id": tmdb_id, "rating": "", "description": "",
-            "genres": item["genres"], "torrent_query": f"{item['title']} {year}".strip(),
+            "title": item["title"],
+            "year": year,
+            "type": item["type"],
+            "poster": "",
+            "tmdb_id": tmdb_id,
+            "rating": "",
+            "description": "",
+            "genres": item["genres"],
+            "torrent_query": f"{item['title']} {year}".strip(),
         }
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
@@ -354,15 +459,19 @@ def get_library():
                 poster = f"/api/tmdb-image/w300{s['poster_path']}" if s.get("poster_path") else ""
                 s_type = "series" if kind == "tv" else "movie"
                 torrent_q = f"{s_title} S01 complete" if s_type == "series" else f"{s_title} {year}".strip()
-                results.append({
-                    "title": s_title, "year": year, "type": s_type,
-                    "description": (s.get("overview") or "")[:200],
-                    "rating": str(round(s.get("vote_average", 0), 1)),
-                    "poster": poster,
-                    "tmdb_id": str(s.get("id", "")),
-                    "torrent_query": torrent_q,
-                    "genre_ids": s.get("genre_ids", []),
-                })
+                results.append(
+                    {
+                        "title": s_title,
+                        "year": year,
+                        "type": s_type,
+                        "description": (s.get("overview") or "")[:200],
+                        "rating": str(round(s.get("vote_average", 0), 1)),
+                        "poster": poster,
+                        "tmdb_id": str(s.get("id", "")),
+                        "torrent_query": torrent_q,
+                        "genre_ids": s.get("genre_ids", []),
+                    }
+                )
             return results
         return tmdb_svc.get_recommendations_for_item(item["title"], item["type"])
 
@@ -451,12 +560,14 @@ def autocomplete(q: str = ""):
         key = item["title"].lower()
         if key not in seen:
             seen.add(key)
-            results.append({
-                "title": item["title"],
-                "year": item.get("year", ""),
-                "tmdb_id": item.get("tmdb_id", ""),
-                "type": item.get("type", "movie"),
-            })
+            results.append(
+                {
+                    "title": item["title"],
+                    "year": item.get("year", ""),
+                    "tmdb_id": item.get("tmdb_id", ""),
+                    "type": item.get("type", "movie"),
+                }
+            )
         if len(results) >= 10:
             break
     if len(results) < 10:
@@ -470,12 +581,14 @@ def autocomplete(q: str = ""):
                 key = movie["title"].lower()
                 if query_lower in key and key not in seen:
                     seen.add(key)
-                    results.append({
-                        "title": movie["title"],
-                        "year": movie.get("year", ""),
-                        "tmdb_id": movie.get("tmdb_id", ""),
-                        "type": movie.get("type", "movie"),
-                    })
+                    results.append(
+                        {
+                            "title": movie["title"],
+                            "year": movie.get("year", ""),
+                            "tmdb_id": movie.get("tmdb_id", ""),
+                            "type": movie.get("type", "movie"),
+                        }
+                    )
                 if len(results) >= 10:
                     break
             if len(results) >= 10:
@@ -556,8 +669,11 @@ def get_detail(tmdb_id: str = "", type: str = "movie"):
 
 @router.get("/external-ratings")
 def get_external_ratings(
-    tmdb_id: str = "", type: str = "movie",
-    imdb_id: str = "", title: str = "", year: str = "",
+    tmdb_id: str = "",
+    type: str = "movie",
+    imdb_id: str = "",
+    title: str = "",
+    year: str = "",
 ):
     """Get IMDB and Letterboxd ratings for a movie/series."""
     if not tmdb_id and not imdb_id and not title:
@@ -598,13 +714,15 @@ def get_series_seasons(tmdb_id: str = "", title: str = ""):
         sn = s.get("season_number", 0)
         if sn == 0:
             continue
-        tmdb_seasons.append({
-            "season_number": sn,
-            "name": s.get("name", f"Season {sn}"),
-            "episode_count": s.get("episode_count", 0),
-            "air_date": s.get("air_date", ""),
-            "poster": f"/api/tmdb-image/w300{s['poster_path']}" if s.get("poster_path") else "",
-        })
+        tmdb_seasons.append(
+            {
+                "season_number": sn,
+                "name": s.get("name", f"Season {sn}"),
+                "episode_count": s.get("episode_count", 0),
+                "air_date": s.get("air_date", ""),
+                "poster": f"/api/tmdb-image/w300{s['poster_path']}" if s.get("poster_path") else "",
+            }
+        )
 
     jellyfin_seasons = {}
     try:
@@ -628,8 +746,7 @@ def get_series_seasons(tmdb_id: str = "", title: str = ""):
 
             if jf_series_id:
                 episodes = jellyfin_svc.request(
-                    f"/Shows/{jf_series_id}/Episodes?userId={user_id}"
-                    f"&Fields=IndexNumber,ParentIndexNumber"
+                    f"/Shows/{jf_series_id}/Episodes?userId={user_id}&Fields=IndexNumber,ParentIndexNumber"
                 )
                 if isinstance(episodes, dict) and episodes.get("Items"):
                     for ep in episodes["Items"]:
@@ -644,13 +761,15 @@ def get_series_seasons(tmdb_id: str = "", title: str = ""):
         data = tmdb_svc.fetch(f"/tv/{tmdb_id}/season/{sn}")
         eps = []
         for ep in data.get("episodes", []):
-            eps.append({
-                "episode_number": ep.get("episode_number", 0),
-                "name": ep.get("name", ""),
-                "runtime": ep.get("runtime") or 0,
-                "air_date": ep.get("air_date", ""),
-                "overview": (ep.get("overview") or "")[:150],
-            })
+            eps.append(
+                {
+                    "episode_number": ep.get("episode_number", 0),
+                    "name": ep.get("name", ""),
+                    "runtime": ep.get("runtime") or 0,
+                    "air_date": ep.get("air_date", ""),
+                    "overview": (ep.get("overview") or "")[:150],
+                }
+            )
         return sn, eps
 
     season_numbers = [ts["season_number"] for ts in tmdb_seasons]
@@ -672,20 +791,24 @@ def get_series_seasons(tmdb_id: str = "", title: str = ""):
         episodes = []
         for ep in tmdb_episodes.get(sn, []):
             en = ep["episode_number"]
-            episodes.append({
-                **ep,
-                "in_library": en in existing_eps,
-                "torrent_query": f"{series_title} {sn_padded}E{en:02d}",
-            })
+            episodes.append(
+                {
+                    **ep,
+                    "in_library": en in existing_eps,
+                    "torrent_query": f"{series_title} {sn_padded}E{en:02d}",
+                }
+            )
 
-        seasons.append({
-            **ts,
-            "existing_episodes": sorted(existing_eps),
-            "existing_count": len(existing_eps),
-            "complete": has_all,
-            "torrent_query": f"{series_title} {sn_padded} complete",
-            "episodes": episodes,
-        })
+        seasons.append(
+            {
+                **ts,
+                "existing_episodes": sorted(existing_eps),
+                "existing_count": len(existing_eps),
+                "complete": has_all,
+                "torrent_query": f"{series_title} {sn_padded} complete",
+                "episodes": episodes,
+            }
+        )
 
     return {
         "title": series_title,

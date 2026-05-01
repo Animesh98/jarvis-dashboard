@@ -91,15 +91,17 @@ def _search_apibay(query: str) -> list:
         for r in results[:20]:
             if r.get("id") == "0" or r.get("name") == "No results returned":
                 continue
-            filtered.append({
-                "name": r.get("name", "Unknown"),
-                "size": int(r.get("size", 0)),
-                "seeders": int(r.get("seeders", 0)),
-                "leechers": int(r.get("leechers", 0)),
-                "info_hash": r.get("info_hash", ""),
-                "added": r.get("added", ""),
-                "category": r.get("category", ""),
-            })
+            filtered.append(
+                {
+                    "name": r.get("name", "Unknown"),
+                    "size": int(r.get("size", 0)),
+                    "seeders": int(r.get("seeders", 0)),
+                    "leechers": int(r.get("leechers", 0)),
+                    "info_hash": r.get("info_hash", ""),
+                    "added": r.get("added", ""),
+                    "category": r.get("category", ""),
+                }
+            )
         return filtered
     except Exception:
         return []
@@ -133,10 +135,10 @@ def add_torrent(magnet: str, category: str = "") -> dict:
         return {"error": "Invalid magnet link"}
     # Auto-detect category from magnet display name if not provided
     if not category:
-        dn_match = re.search(r'dn=([^&]+)', magnet)
+        dn_match = re.search(r"dn=([^&]+)", magnet)
         if dn_match:
             dn = urllib.parse.unquote(dn_match.group(1))
-            if re.search(r'\bS\d{1,2}|[Ss]eason\s*\d', dn):
+            if re.search(r"\bS\d{1,2}|[Ss]eason\s*\d", dn):
                 category = "tv"
             else:
                 category = "movies"
@@ -156,13 +158,24 @@ def clean_completed() -> dict:
             return torrents
         cleaned = []
         for t in torrents:
-            if t.get("progress", 0) >= 1.0 and t.get("state", "") in ("pausedUP", "stalledUP", "uploading", "stoppedUP", "forcedUP", "queuedUP", "checkingUP"):
+            if t.get("progress", 0) >= 1.0 and t.get("state", "") in (
+                "pausedUP",
+                "stalledUP",
+                "uploading",
+                "stoppedUP",
+                "forcedUP",
+                "queuedUP",
+                "checkingUP",
+            ):
                 h = t.get("hash", "")
                 if h:
                     request(f"/torrents/delete?hashes={h}&deleteFiles=false", method="POST")
                     cleaned.append(t.get("name", h))
         if cleaned:
-            return {"ok": True, "message": f"Removed {len(cleaned)} completed: {', '.join(cleaned[:3])}{'...' if len(cleaned) > 3 else ''}"}
+            return {
+                "ok": True,
+                "message": f"Removed {len(cleaned)} completed: {', '.join(cleaned[:3])}{'...' if len(cleaned) > 3 else ''}",
+            }
         return {"ok": True, "message": "No completed torrents to clean"}
     except Exception as e:
         return {"error": str(e)}

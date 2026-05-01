@@ -1,9 +1,7 @@
-import urllib.parse
-
-from fastapi import APIRouter
-from fastapi.responses import Response
 
 import httpx
+from fastapi import APIRouter
+from fastapi.responses import Response
 
 from app.config import settings
 from app.services import jellyfin as jellyfin_svc
@@ -102,6 +100,7 @@ def poster_proxy(item_id: str, maxHeight: int = 300, tag: str = ""):
 def play_redirect(item_id: str):
     """Redirect to Jellyfin web player for an item."""
     from fastapi.responses import RedirectResponse
+
     jf_url = settings.jellyfin_base.replace("localhost", "192.168.0.2")
     return RedirectResponse(url=f"{jf_url}/web/#/details?id={item_id}")
 
@@ -168,7 +167,9 @@ def media_overview():
         for item in resume["Items"]:
             d = _item_to_dict(item, user_id)
             if item.get("Type") == "Episode":
-                d["name"] = f"{item.get('SeriesName', '')} S{item.get('ParentIndexNumber', '?')}E{item.get('IndexNumber', '?')}"
+                d["name"] = (
+                    f"{item.get('SeriesName', '')} S{item.get('ParentIndexNumber', '?')}E{item.get('IndexNumber', '?')}"
+                )
                 d["episode_title"] = item.get("Name", "")
             continue_watching.append(d)
     result["continue_watching"] = continue_watching
@@ -187,17 +188,19 @@ def media_overview():
                     poster = _poster_url(np["SeriesId"], np["SeriesPrimaryImageTag"])
                 else:
                     poster = _poster_url(np["Id"], np.get("ImageTags", {}).get("Primary", ""))
-                now_playing.append({
-                    "user": s.get("UserName", ""),
-                    "client": s.get("Client", ""),
-                    "device": s.get("DeviceName", ""),
-                    "title": np.get("Name", ""),
-                    "type": np.get("Type", ""),
-                    "progress": round(pos / total * 100),
-                    "poster": poster,
-                    "is_paused": s.get("PlayState", {}).get("IsPaused", False),
-                    "jellyfin_id": _jellyfin_play_id(np["Id"]),
-                })
+                now_playing.append(
+                    {
+                        "user": s.get("UserName", ""),
+                        "client": s.get("Client", ""),
+                        "device": s.get("DeviceName", ""),
+                        "title": np.get("Name", ""),
+                        "type": np.get("Type", ""),
+                        "progress": round(pos / total * 100),
+                        "poster": poster,
+                        "is_paused": s.get("PlayState", {}).get("IsPaused", False),
+                        "jellyfin_id": _jellyfin_play_id(np["Id"]),
+                    }
+                )
     result["now_playing"] = now_playing
 
     # Next up (series)
@@ -213,17 +216,19 @@ def media_overview():
                 poster = _poster_url(item["SeriesId"], item["SeriesPrimaryImageTag"])
             else:
                 poster = _poster_url(item["Id"], item.get("ImageTags", {}).get("Primary", ""))
-            next_episodes.append({
-                "id": item["Id"],
-                "series_name": item.get("SeriesName", ""),
-                "season": item.get("ParentIndexNumber", 0),
-                "episode": item.get("IndexNumber", 0),
-                "name": item.get("Name", ""),
-                "overview": (item.get("Overview") or "")[:150],
-                "runtime_min": round(item.get("RunTimeTicks", 0) / 600000000),
-                "poster": poster,
-                "jellyfin_id": _jellyfin_play_id(item["Id"]),
-            })
+            next_episodes.append(
+                {
+                    "id": item["Id"],
+                    "series_name": item.get("SeriesName", ""),
+                    "season": item.get("ParentIndexNumber", 0),
+                    "episode": item.get("IndexNumber", 0),
+                    "name": item.get("Name", ""),
+                    "overview": (item.get("Overview") or "")[:150],
+                    "runtime_min": round(item.get("RunTimeTicks", 0) / 600000000),
+                    "poster": poster,
+                    "jellyfin_id": _jellyfin_play_id(item["Id"]),
+                }
+            )
     result["next_up"] = next_episodes
 
     # Unwatched movies
@@ -250,7 +255,9 @@ def media_overview():
             d = _item_to_dict(item, user_id)
             d["date_played"] = item.get("UserData", {}).get("LastPlayedDate", "")
             if item.get("Type") == "Episode":
-                d["name"] = f"{item.get('SeriesName', '')} S{item.get('ParentIndexNumber', '?')}E{item.get('IndexNumber', '?')}"
+                d["name"] = (
+                    f"{item.get('SeriesName', '')} S{item.get('ParentIndexNumber', '?')}E{item.get('IndexNumber', '?')}"
+                )
                 d["episode_title"] = item.get("Name", "")
             watch_history.append(d)
     result["watch_history"] = watch_history
@@ -279,8 +286,7 @@ def media_overview():
         for g in item.get("genres", []):
             genre_counts[g] = genre_counts.get(g, 0) + 1
     result["genres"] = sorted(
-        [{"name": g, "count": c} for g, c in genre_counts.items()],
-        key=lambda x: x["count"], reverse=True
+        [{"name": g, "count": c} for g, c in genre_counts.items()], key=lambda x: x["count"], reverse=True
     )
 
     # Total runtime

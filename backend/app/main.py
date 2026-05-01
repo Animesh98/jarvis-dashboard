@@ -4,15 +4,15 @@ from pathlib import Path
 
 import httpx
 from fastapi import APIRouter, FastAPI
-from fastapi.responses import Response, PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 
 from app.config import settings
 from app.middleware import APIKeyMiddleware
-from app.routers import system, docker, torrents, media, recommendations, files, actions, streaming, tasks, watchlist
-from app.services import qbittorrent as qbit_svc
-from app.services import transmission as trans_svc
-from app.services import system as system_svc
+from app.routers import actions, docker, files, media, recommendations, streaming, system, tasks, torrents, watchlist
 from app.services import database as db_svc
+from app.services import qbittorrent as qbit_svc
+from app.services import system as system_svc
+from app.services import transmission as trans_svc
 
 # TMDB image proxy — serves images from image.tmdb.org through the backend
 # so mobile clients on Tailscale (which can't resolve TMDB CDN) still get images
@@ -82,6 +82,7 @@ def serve_audit_report():
     if not report_path.exists():
         return PlainTextResponse("Report not found", status_code=404)
     import markdown
+
     md_text = report_path.read_text()
     html_body = markdown.markdown(md_text, extensions=["tables", "fenced_code", "toc"])
     html = f"""<!DOCTYPE html>
@@ -107,4 +108,5 @@ def serve_audit_report():
 </style>
 </head><body>{html_body}</body></html>"""
     from fastapi.responses import HTMLResponse
+
     return HTMLResponse(html)

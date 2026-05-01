@@ -6,7 +6,6 @@ by checking duration and metadata, and returns a direct YouTube watch URL.
 
 import re
 import time
-from concurrent.futures import ThreadPoolExecutor
 
 import yt_dlp
 
@@ -17,12 +16,20 @@ MIN_MOVIE_DURATION = 40 * 60  # 40 minutes
 _cache: dict = {}
 _CACHE_TTL = 3600  # 1 hour
 
+
 # Quiet yt-dlp logger
 class _QuietLogger:
-    def debug(self, msg): pass
-    def info(self, msg): pass
-    def warning(self, msg): pass
-    def error(self, msg): pass
+    def debug(self, msg):
+        pass
+
+    def info(self, msg):
+        pass
+
+    def warning(self, msg):
+        pass
+
+    def error(self, msg):
+        pass
 
 
 def _extract_info(query: str) -> list[dict]:
@@ -60,10 +67,20 @@ def _is_full_movie(entry: dict, title: str) -> bool:
 
     # Reject trailers, teasers, songs, scenes, reviews
     reject_patterns = [
-        r"\btrailer\b", r"\bteaser\b", r"\bsong\b", r"\bjukebox\b",
-        r"\bscene\b", r"\breview\b", r"\breaction\b", r"\bclip\b",
-        r"\bbest scenes\b", r"\bost\b", r"\bsoundtrack\b",
-        r"\blyrics?\b", r"\bbehind the scenes\b", r"\bmaking of\b",
+        r"\btrailer\b",
+        r"\bteaser\b",
+        r"\bsong\b",
+        r"\bjukebox\b",
+        r"\bscene\b",
+        r"\breview\b",
+        r"\breaction\b",
+        r"\bclip\b",
+        r"\bbest scenes\b",
+        r"\bost\b",
+        r"\bsoundtrack\b",
+        r"\blyrics?\b",
+        r"\bbehind the scenes\b",
+        r"\bmaking of\b",
     ]
     for pattern in reject_patterns:
         if re.search(pattern, video_title):
@@ -71,16 +88,21 @@ def _is_full_movie(entry: dict, title: str) -> bool:
 
     # Positive signals in title/description
     positive_patterns = [
-        r"\bfull movie\b", r"\bfull film\b", r"\bhd movie\b",
-        r"\bhindi movie\b", r"\bbollywood\b", r"\bhollywood\b",
-        r"\bsuperhit\b", r"\bblockbuster\b", r"\bnew movie\b",
-        r"\baction movie\b", r"\b(dubbed|official)\b",
-        r"\bfull hd\b", r"\bcomedy movie\b",
+        r"\bfull movie\b",
+        r"\bfull film\b",
+        r"\bhd movie\b",
+        r"\bhindi movie\b",
+        r"\bbollywood\b",
+        r"\bhollywood\b",
+        r"\bsuperhit\b",
+        r"\bblockbuster\b",
+        r"\bnew movie\b",
+        r"\baction movie\b",
+        r"\b(dubbed|official)\b",
+        r"\bfull hd\b",
+        r"\bcomedy movie\b",
     ]
-    positive_score = sum(
-        1 for p in positive_patterns
-        if re.search(p, video_title) or re.search(p, description)
-    )
+    positive_score = sum(1 for p in positive_patterns if re.search(p, video_title) or re.search(p, description))
 
     # Title similarity check
     search_lower = title.lower().strip()

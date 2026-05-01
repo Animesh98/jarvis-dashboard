@@ -3,10 +3,10 @@ import subprocess
 from fastapi import APIRouter
 
 from app.config import settings
+from app.services import docker as docker_svc
 from app.services import jellyfin as jellyfin_svc
 from app.services import qbittorrent as qbit_svc
 from app.services import transmission as trans_svc
-from app.services import docker as docker_svc
 
 router = APIRouter(prefix="/api/actions", tags=["actions"])
 
@@ -34,8 +34,7 @@ def docker_prune():
 def update_check():
     try:
         subprocess.run(["apt", "update", "-qq"], capture_output=True, timeout=30)
-        r = subprocess.run(["apt", "list", "--upgradable"],
-                           capture_output=True, text=True, timeout=15)
+        r = subprocess.run(["apt", "list", "--upgradable"], capture_output=True, text=True, timeout=15)
         lines = [line for line in r.stdout.strip().split("\n") if "/" in line]
         if lines:
             return {"ok": True, "message": f"{len(lines)} packages upgradable", "packages": lines[:20]}

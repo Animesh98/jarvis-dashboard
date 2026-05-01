@@ -4,8 +4,13 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: $space-lg;
-  @include tablet { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: $bp-mobile) { grid-template-columns: 1fr; gap: $space-md; }
+  @include tablet {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: 1fr;
+    gap: $space-md;
+  }
 }
 
 .netCard {
@@ -16,10 +21,15 @@
   @include card;
   padding: $space-xl;
   gap: $space-md;
-  transition: border-color $duration-normal, box-shadow $duration-normal;
+  transition:
+    border-color $duration-normal,
+    box-shadow $duration-normal;
   max-width: 100%;
   overflow: hidden;
-  &:hover { border-color: var(--card-hover-border); box-shadow: var(--glass-shadow-lg); }
+  &:hover {
+    border-color: var(--card-hover-border);
+    box-shadow: var(--glass-shadow-lg);
+  }
 }
 
 .netLabel {
@@ -32,7 +42,11 @@
   align-items: center;
 }
 
-.netSpeeds { display: flex; flex-direction: column; gap: $space-sm; }
+.netSpeeds {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
 
 .speedRow {
   display: flex;
@@ -44,15 +58,25 @@
   color: var(--text-primary);
 }
 
-.actionsGrid { display: flex; flex-wrap: wrap; gap: $space-sm; }
+.actionsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-sm;
+}
 
 .actionBtn {
   transition: all $duration-normal $ease-smooth !important;
-  &:hover:not(:disabled) { transform: translateY(-2px) !important; box-shadow: var(--glass-shadow) !important; }
+  &:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    box-shadow: var(--glass-shadow) !important;
+  }
 }
 
 // Processes
-.procTable { font-family: $font-mono; font-size: $text-xs; }
+.procTable {
+  font-family: $font-mono;
+  font-size: $text-xs;
+}
 
 .procRow {
   display: flex;
@@ -63,7 +87,9 @@
   transition: background $duration-fast;
   animation: fadeIn $duration-normal $ease-smooth both;
 
-  &:hover:not(.procHeader) { background: var(--row-hover); }
+  &:hover:not(.procHeader) {
+    background: var(--row-hover);
+  }
 
   @include mobile {
     padding: $space-sm $space-md;
@@ -78,10 +104,28 @@
   animation: none;
 }
 
-.procPid { width: 50px; color: var(--text-tertiary); }
-.procUser { width: 65px; overflow: hidden; text-overflow: ellipsis; }
-.procCpu, .procMem { width: 50px; text-align: right; font-weight: 600; }
-.procCmd { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
+.procPid {
+  width: 50px;
+  color: var(--text-tertiary);
+}
+.procUser {
+  width: 65px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.procCpu,
+.procMem {
+  width: 50px;
+  text-align: right;
+  font-weight: 600;
+}
+.procCmd {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
 
 // Storage
 .storageBar {
@@ -106,13 +150,42 @@
   min-width: 0;
 }
 
-.storageLegend { display: flex; flex-wrap: wrap; gap: $space-md; }
-.legendItem { display: flex; align-items: center; gap: $space-sm; font-size: $text-sm; }
-.legendDot { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
-.legendSize { font-family: $font-mono; font-size: $text-xs; color: var(--text-tertiary); }
-.storageMeta { margin-top: $space-md; font-family: $font-mono; font-size: $text-xs; color: var(--text-tertiary); }
+.storageLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-md;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  font-size: $text-sm;
+}
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.legendSize {
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: var(--text-tertiary);
+}
+.storageMeta {
+  margin-top: $space-md;
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: var(--text-tertiary);
+}
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

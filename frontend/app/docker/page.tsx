@@ -1,39 +1,43 @@
-'use client'
+'use client';
 
-import { useState, lazy, Suspense } from 'react'
-import { useData } from '@/lib/DataContext'
-import { api, colorForPercent } from '@/lib/api'
-import { toast } from '@/lib/toast'
-import { RotateCcw, Square, Play, ScrollText } from 'lucide-react'
-import styles from './page.module.scss'
+import { useState, lazy, Suspense } from 'react';
+import { useData } from '@/lib/DataContext';
+import { api, colorForPercent } from '@/lib/api';
+import { toast } from '@/lib/toast';
+import { RotateCcw, Square, Play, ScrollText } from 'lucide-react';
+import styles from './page.module.scss';
 
-const LogPanel = lazy(() => import('@/components/LogPanel'))
+const LogPanel = lazy(() => import('@/components/LogPanel'));
 
 export default function DockerPage() {
-  const { data, refreshFast } = useData()
-  const { containers, stats } = data
-  const [logContainer, setLogContainer] = useState<string | null>(null)
+  const { data, refreshFast } = useData();
+  const { containers, stats } = data;
+  const [logContainer, setLogContainer] = useState<string | null>(null);
 
-  const statsMap: Record<string, any> = {}
-  if (Array.isArray(stats)) stats.forEach(s => { statsMap[s.Name] = s })
+  const statsMap: Record<string, any> = {};
+  if (Array.isArray(stats))
+    stats.forEach((s) => {
+      statsMap[s.Name] = s;
+    });
 
   const sorted = Array.isArray(containers)
     ? [...containers].sort((a, b) => {
-        if (a.State === 'running' && b.State !== 'running') return -1
-        if (a.State !== 'running' && b.State === 'running') return 1
-        return a.Names.localeCompare(b.Names)
+        if (a.State === 'running' && b.State !== 'running') return -1;
+        if (a.State !== 'running' && b.State === 'running') return 1;
+        return a.Names.localeCompare(b.Names);
       })
-    : []
+    : [];
 
-  const running = sorted.filter(c => c.State === 'running').length
+  const running = sorted.filter((c) => c.State === 'running').length;
 
   async function doAction(container: string, action: string) {
     const r = await api('/api/docker/action', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ container, action }),
-    })
-    toast(r.data?.message || r.error || 'Done', r.error ? 'error' : 'success')
-    setTimeout(refreshFast, 1500)
+    });
+    toast(r.data?.message || r.error || 'Done', r.error ? 'error' : 'success');
+    setTimeout(refreshFast, 1500);
   }
 
   return (
@@ -48,13 +52,13 @@ export default function DockerPage() {
 
       <div className="page-body">
         <div className={`${styles.grid} stagger-children`}>
-          {sorted.map(co => {
-            const name = co.Names.replace(/^\//, '')
-            const state = co.State || 'unknown'
-            const st = statsMap[name]
-            const cpuP = st ? parseFloat(st.CPUPerc) || 0 : 0
-            const memP = st ? parseFloat(st.MemPerc) || 0 : 0
-            const isRun = state === 'running'
+          {sorted.map((co) => {
+            const name = co.Names.replace(/^\//, '');
+            const state = co.State || 'unknown';
+            const st = statsMap[name];
+            const cpuP = st ? parseFloat(st.CPUPerc) || 0 : 0;
+            const memP = st ? parseFloat(st.MemPerc) || 0 : 0;
+            const isRun = state === 'running';
 
             return (
               <div key={name} className={styles.container}>
@@ -63,40 +67,66 @@ export default function DockerPage() {
                   <button className={styles.containerName} onClick={() => setLogContainer(name)}>
                     {name}
                   </button>
-                  <button className={styles.logBtn} onClick={() => setLogContainer(name)} title="View logs">
+                  <button
+                    className={styles.logBtn}
+                    onClick={() => setLogContainer(name)}
+                    title="View logs"
+                  >
                     <ScrollText size={13} />
                   </button>
                 </div>
                 <div className={styles.containerStatus}>{co.Status || state}</div>
 
                 <div className={styles.statsRow}>
-                  <span>CPU <strong>{st?.CPUPerc || '--'}</strong></span>
-                  <span>MEM <strong>{st?.MemUsage || '--'}</strong></span>
+                  <span>
+                    CPU <strong>{st?.CPUPerc || '--'}</strong>
+                  </span>
+                  <span>
+                    MEM <strong>{st?.MemUsage || '--'}</strong>
+                  </span>
                 </div>
 
                 <div className="progress" style={{ marginBottom: 4 }}>
-                  <div className="progress-fill" style={{ width: `${cpuP}%`, background: colorForPercent(cpuP) }} />
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${cpuP}%`, background: colorForPercent(cpuP) }}
+                  />
                 </div>
                 <div className="progress">
-                  <div className="progress-fill" style={{ width: `${memP}%`, background: colorForPercent(memP) }} />
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${memP}%`, background: colorForPercent(memP) }}
+                  />
                 </div>
 
                 <div className={styles.containerActions}>
-                  <button className="btn btn-ghost btn-sm" onClick={() => doAction(name, 'restart')} title="Restart">
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => doAction(name, 'restart')}
+                    title="Restart"
+                  >
                     <RotateCcw size={13} />
                   </button>
                   {isRun ? (
-                    <button className="btn btn-danger btn-sm" onClick={() => doAction(name, 'stop')} title="Stop">
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => doAction(name, 'stop')}
+                      title="Stop"
+                    >
                       <Square size={12} />
                     </button>
                   ) : (
-                    <button className="btn btn-primary btn-sm" onClick={() => doAction(name, 'start')} title="Start">
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => doAction(name, 'start')}
+                      title="Start"
+                    >
                       <Play size={12} />
                     </button>
                   )}
                 </div>
               </div>
-            )
+            );
           })}
         </div>
 
@@ -104,8 +134,10 @@ export default function DockerPage() {
       </div>
 
       <Suspense fallback={null}>
-        {logContainer && <LogPanel container={logContainer} onClose={() => setLogContainer(null)} />}
+        {logContainer && (
+          <LogPanel container={logContainer} onClose={() => setLogContainer(null)} />
+        )}
       </Suspense>
     </>
-  )
+  );
 }

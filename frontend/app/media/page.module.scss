@@ -1,8 +1,24 @@
 @use '../../styles/variables' as *;
 
-.loadingState { display: flex; align-items: center; justify-content: center; gap: $space-sm; padding: $space-3xl; color: var(--text-tertiary); }
-.spinner { animation: spin 1s linear infinite; }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-sm;
+  padding: $space-3xl;
+  color: var(--text-tertiary);
+}
+.spinner {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 // Stats bar (single compact row)
 .statsBar {
@@ -27,7 +43,9 @@
   gap: $space-xs;
 }
 
-.statIcon { flex-shrink: 0; }
+.statIcon {
+  flex-shrink: 0;
+}
 
 .statNum {
   font-size: $text-xl;
@@ -47,8 +65,12 @@
   font-family: $font-mono;
   opacity: 0.7;
 
-  &::before { content: '('; }
-  &::after { content: ')'; }
+  &::before {
+    content: '(';
+  }
+  &::after {
+    content: ')';
+  }
 }
 
 .statDivider {
@@ -56,11 +78,17 @@
   height: 24px;
   background: var(--subtle-border);
 
-  @include mobile { display: none; }
+  @include mobile {
+    display: none;
+  }
 }
 
 // Now playing
-.npList { display: flex; flex-direction: column; gap: $space-sm; }
+.npList {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
 
 .npCard {
   @include card;
@@ -72,22 +100,65 @@
   color: inherit;
   transition: border-color $duration-fast;
 
-  &:hover { border-color: var(--blue); }
+  &:hover {
+    border-color: var(--blue);
+  }
 }
 
-.npPoster { width: 56px; height: 84px; object-fit: cover; border-radius: $radius-sm; flex-shrink: 0; }
-.npPosterEmpty { width: 56px; height: 84px; display: flex; align-items: center; justify-content: center; background: var(--bg-tertiary); border-radius: $radius-sm; color: var(--text-tertiary); flex-shrink: 0; }
-.npInfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.npTitle { font-weight: 600; color: var(--text-primary); }
-.npDevice { font-size: $text-xs; color: var(--text-tertiary); }
-.npProgressRow { display: flex; align-items: center; gap: $space-sm; margin-top: 2px; }
-.npPct { font-family: $font-mono; font-size: $text-xs; color: var(--text-secondary); width: 32px; text-align: right; }
+.npPoster {
+  width: 56px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: $radius-sm;
+  flex-shrink: 0;
+}
+.npPosterEmpty {
+  width: 56px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border-radius: $radius-sm;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+.npInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.npTitle {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.npDevice {
+  font-size: $text-xs;
+  color: var(--text-tertiary);
+}
+.npProgressRow {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  margin-top: 2px;
+}
+.npPct {
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: var(--text-secondary);
+  width: 32px;
+  text-align: right;
+}
 
 // Scroll container with arrows
 .scrollContainer {
   position: relative;
 
-  &:hover .scrollArrow { opacity: 1; }
+  &:hover .scrollArrow {
+    opacity: 1;
+  }
 }
 
 .scrollRow {
@@ -101,7 +172,9 @@
   -webkit-overflow-scrolling: touch;
 
   scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .scrollArrow {
@@ -127,17 +200,23 @@
     border-radius: $radius-sm;
   }
 
-  @include mobile { display: none; }
+  @include mobile {
+    display: none;
+  }
 }
 
 .scrollLeft {
   left: -4px;
-  &::before { background: linear-gradient(to right, rgba(0,0,0,0.7), transparent); }
+  &::before {
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.7), transparent);
+  }
 }
 
 .scrollRight {
   right: -4px;
-  &::before { background: linear-gradient(to left, rgba(0,0,0,0.7), transparent); }
+  &::before {
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.7), transparent);
+  }
 }
 
 // Poster card (shared by all sections)
@@ -150,7 +229,10 @@
   scroll-snap-align: start;
   flex-shrink: 0;
 
-  @include mobile { min-width: 105px; max-width: 105px; }
+  @include mobile {
+    min-width: 105px;
+    max-width: 105px;
+  }
 }
 
 .posterWrap {
@@ -162,28 +244,69 @@
   background: var(--bg-tertiary);
   display: block;
 
-  &:hover .playOverlay { opacity: 1; }
+  &:hover .playOverlay {
+    opacity: 1;
+  }
 }
 
-.posterImg { width: 100%; height: 100%; object-fit: cover; }
-.posterEmpty { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
+.posterImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.posterEmpty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+}
 
-.posterProgress { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: rgba(0, 0, 0, 0.5); }
-.posterProgressFill { height: 100%; background: $green; border-radius: 0 2px 0 0; }
+.posterProgress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.5);
+}
+.posterProgressFill {
+  height: 100%;
+  background: $green;
+  border-radius: 0 2px 0 0;
+}
 
-.watchedBadge { position: absolute; top: 4px; right: 4px; color: $green; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }
+.watchedBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  color: $green;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
 .ratingBadge {
-  position: absolute; bottom: 4px; left: 4px;
-  background: rgba(0,0,0,0.75); color: $orange;
-  font-size: 0.6rem; font-weight: 600; font-family: $font-mono;
-  padding: 2px 5px; border-radius: 3px;
-  display: flex; align-items: center; gap: 2px;
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.75);
+  color: $orange;
+  font-size: 0.6rem;
+  font-weight: 600;
+  font-family: $font-mono;
+  padding: 2px 5px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .playOverlay {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.45);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
   color: white;
   opacity: 0;
   transition: opacity $duration-fast;
@@ -200,7 +323,9 @@
   overflow: hidden;
   text-decoration: none;
 
-  &:hover { color: var(--blue); }
+  &:hover {
+    color: var(--blue);
+  }
 }
 
 .posterMeta {
@@ -226,9 +351,15 @@
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: $space-md;
 
-  @include mobile { grid-template-columns: repeat(3, 1fr); gap: $space-sm; }
+  @include mobile {
+    grid-template-columns: repeat(3, 1fr);
+    gap: $space-sm;
+  }
 
-  .posterCard { min-width: unset; max-width: unset; }
+  .posterCard {
+    min-width: unset;
+    max-width: unset;
+  }
 }
 
 // Genre chart
@@ -240,13 +371,44 @@
   gap: $space-sm;
 }
 
-.genreRow { display: flex; align-items: center; gap: $space-md; }
-
-.genreName {
-  width: 90px; font-size: $text-sm; font-weight: 500; color: var(--text-secondary); text-align: right; flex-shrink: 0;
-  @include mobile { width: 65px; font-size: $text-xs; }
+.genreRow {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
 }
 
-.genreBarWrap { flex: 1; height: 18px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
-.genreBar { height: 100%; background: linear-gradient(90deg, rgba($blue, 0.6), rgba($blue, 0.3)); border-radius: 4px; min-width: 4px; transition: width 0.6s $ease-smooth; }
-.genreCount { width: 24px; font-family: $font-mono; font-size: $text-xs; color: var(--text-tertiary); text-align: right; flex-shrink: 0; }
+.genreName {
+  width: 90px;
+  font-size: $text-sm;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+  @include mobile {
+    width: 65px;
+    font-size: $text-xs;
+  }
+}
+
+.genreBarWrap {
+  flex: 1;
+  height: 18px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.genreBar {
+  height: 100%;
+  background: linear-gradient(90deg, rgba($blue, 0.6), rgba($blue, 0.3));
+  border-radius: 4px;
+  min-width: 4px;
+  transition: width 0.6s $ease-smooth;
+}
+.genreCount {
+  width: 24px;
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: var(--text-tertiary);
+  text-align: right;
+  flex-shrink: 0;
+}

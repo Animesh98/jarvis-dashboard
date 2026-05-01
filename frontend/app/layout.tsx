@@ -1,28 +1,30 @@
-import type { Metadata, Viewport } from 'next'
-import '@/styles/globals.scss'
-import TopNav from '@/components/Sidebar'
-import MobileNav from '@/components/MobileNav'
-import { DataProvider } from '@/lib/DataContext'
-import { ThemeProvider } from '@/lib/ThemeContext'
+import type { Metadata, Viewport } from 'next';
+import '@/styles/globals.scss';
+import TopNav from '@/components/Sidebar';
+import MobileNav from '@/components/MobileNav';
+import { DataProvider } from '@/lib/DataContext';
+import { ThemeProvider } from '@/lib/ThemeContext';
 
 export const metadata: Metadata = {
   title: 'Jarvis',
   description: 'Homelab Mission Control',
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Jarvis' },
-}
+};
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: '#000000',
-}
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
           (function() {
             try {
               var t = localStorage.getItem('jarvis-theme');
@@ -33,16 +35,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }
             } catch(e) {}
           })();
-        `}} />
+        `,
+          }}
+        />
       </head>
       <body>
         <ThemeProvider>
           <DataProvider>
             <div className="app-shell">
               <TopNav />
-              <div className="main-content">
-                {children}
-              </div>
+              <div className="main-content">{children}</div>
               <MobileNav />
             </div>
             <div id="toast-container" className="toast-container" />
@@ -50,5 +52,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
