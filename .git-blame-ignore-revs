@@ -1,0 +1,7 @@
+# Revisions in this file are ignored by `git blame`.
+# Configure locally with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub's blame UI reads this file automatically.
+
+# Apply ruff + prettier reformatting across codebase (2026-05-01)
+a75707d28726b908bc8b3b439b15f7bf7442c036
