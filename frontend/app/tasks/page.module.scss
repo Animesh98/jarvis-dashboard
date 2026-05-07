@@ -424,27 +424,14 @@
   padding: 3px 10px !important;
 }
 
-// Autocomplete — smart positioning (up or down)
+// Autocomplete — positioned by PortalDropdown (rendered into <body>),
+// so we only need visual styling here, no absolute positioning.
 .autocomplete {
-  position: absolute;
-  left: 0;
-  right: 0;
   @include card;
   padding: $space-xs 0;
-  z-index: 100;
   max-height: min(220px, 40vh);
   overflow-y: auto;
   animation: fadeIn $duration-fast $ease-smooth both;
-}
-
-.autocompleteUp {
-  bottom: 100%;
-  margin-bottom: 4px;
-}
-
-.autocompleteDown {
-  top: 100%;
-  margin-top: 4px;
 }
 
 .autocompleteItem {
@@ -774,5 +761,93 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// ── Smart Actions on entity-linked tasks ─────────────────────
+.smartActionsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.smartActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.smartLoading {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-tertiary);
+  padding: 0 4px;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.smartBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  font-family: $font-sans;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: $radius-full;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background $duration-fast,
+    transform $duration-fast $ease-spring;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.smartBtnPlay {
+  background: rgba($green, 0.14);
+  color: $green;
+  border: 1px solid rgba($green, 0.28);
+
+  &:hover {
+    background: rgba($green, 0.22);
+  }
+}
+
+.smartBtnTorrent {
+  background: rgba($blue, 0.12);
+  color: $blue;
+  border: 1px solid rgba($blue, 0.25);
+
+  &:hover {
+    background: rgba($blue, 0.2);
+  }
+}
+
+.smartBtnDiscover {
+  background: rgba($purple, 0.1);
+  color: $purple;
+  border: 1px solid rgba($purple, 0.22);
+
+  &:hover {
+    background: rgba($purple, 0.18);
   }
 }

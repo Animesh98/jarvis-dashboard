@@ -59,6 +59,26 @@ Filesystem browser with breadcrumb navigation. Supports rename, copy, move, dele
 
 ![File Explorer](./docs/screenshots/files-dark.png)
 
+### Tasks
+
+A kanban (Todo / In Progress / Done) with a calendar date picker. Drag-and-drop reordering, per-day views, and any incomplete task automatically rolls forward to today on first load — no orphaned cards from yesterday.
+
+What makes it homelab-aware: type `{{` in any task title to autocomplete a movie or TV series via TMDB. Once linked, the card grows contextual buttons:
+
+- **Play** — if the title is already in your Jellyfin library, opens it in the web player on whatever host you're connected through (`jackal:8096`, `192.168.0.x:8096`, etc.)
+- **Get** — if it isn't, opens the same torrent search modal used on the Discover detail page, prefilled with the right query (`Title S01 complete` for series)
+- **Info** — opens the full Discover detail page
+
+Tasks are stored in `backend/tasks.json` (gitignored).
+
+### Notes
+
+Tagged notes with a two-pane editor (list on the left, editor on the right). Search across title and body, filter by tag, pin to top. Auto-save after 600 ms of idle, with a small "Saving… / Unsaved" indicator in the page header. Backed by a single `backend/notes.json` (gitignored).
+
+### Today on the Overview
+
+The Overview page shows a "Today" card alongside the system gauges — top incomplete tasks for the day with a checkbox to mark done and an inline `Add task` field. Click-through to the full kanban for the rest. Hidden when the `tasks` feature is disabled.
+
 ### Theming
 
 Dark and light modes with system preference detection.
@@ -104,7 +124,7 @@ cd jarvis-dashboard
 ./setup.sh run docker   # interactive setup + docker compose up
 ```
 
-`./setup.sh` walks you through picking which features to enable (Discover is always on; Docker, Torrents, Media, System, Files, Tasks are opt-in), collects only the credentials those features need, and writes `.env`. Re-running is safe — existing values become the defaults.
+`./setup.sh` walks you through picking which features to enable (Discover is always on; Docker, Torrents, Media, System, Files, Tasks, Notes are opt-in), collects only the credentials those features need, and writes `.env`. Re-running is safe — existing values become the defaults.
 
 Open `http://localhost:3000`. API docs at `http://localhost:8002/docs`.
 
@@ -149,7 +169,7 @@ cd ../frontend && npm install && npm run build && npm start
 | `JELLYFIN_BASE` | No | Jellyfin URL (default: `http://localhost:8096`) |
 | `WEATHER_CITY` | No | City name for weather widget |
 | `API_KEY` | No | Protects backend from non-localhost callers (see [Authentication](#authentication)) |
-| `ENABLED_FEATURES` | No | Comma-separated list of features to enable. Defaults to `all`. Recognized: `system,docker,torrents,media,discover,files,tasks`. `discover` is always on. |
+| `ENABLED_FEATURES` | No | Comma-separated list of features to enable. Defaults to `all`. Recognized: `system,docker,torrents,media,discover,files,tasks,notes`. `discover` is always on. |
 
 **Requirements (bare metal):** Python 3.10+, Node.js 18+, Docker engine, Jellyfin, and Transmission or qBittorrent accessible on the local network.
 
@@ -239,6 +259,28 @@ python3 -c "import secrets; print(secrets.token_urlsafe(32))"
 | POST | `/api/actions/clean-torrents` | Remove completed torrents |
 | POST | `/api/actions/docker-prune` | Prune unused Docker resources |
 | POST | `/api/actions/update-check` | Check for system updates |
+
+### Tasks
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/tasks?date=YYYY-MM-DD` | List tasks for a given day |
+| POST | `/api/tasks` | Create a task |
+| PATCH | `/api/tasks/{id}` | Update title / column / order / entities / date |
+| DELETE | `/api/tasks/{id}` | Delete a task |
+| POST | `/api/tasks/reorder` | Batch update column + order (drag-and-drop) |
+| POST | `/api/tasks/migrate?date=YYYY-MM-DD` | Roll all incomplete tasks forward to a date |
+
+### Notes
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/notes?q=X&tag=Y` | List notes (search and tag filter both optional) |
+| GET | `/api/notes/tags` | All tags with usage counts |
+| GET | `/api/notes/{id}` | Single note |
+| POST | `/api/notes` | Create a note |
+| PATCH | `/api/notes/{id}` | Update title / content / tags / pinned |
+| DELETE | `/api/notes/{id}` | Delete a note |
 
 </details>
 

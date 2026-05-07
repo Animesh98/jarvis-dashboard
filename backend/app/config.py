@@ -35,13 +35,13 @@ class Settings(BaseSettings):
     api_key: str = ""
 
     # Comma-separated list of enabled feature modules, or "all" (default).
-    # Recognized: system,docker,torrents,media,discover,files,tasks
+    # Recognized: system,docker,torrents,media,discover,files,tasks,notes
     # `discover` is always on regardless of this setting.
     enabled_features: str = "all"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
-    _ALL_FEATURES = ("system", "docker", "torrents", "media", "discover", "files", "tasks")
+    _ALL_FEATURES = ("system", "docker", "torrents", "media", "discover", "files", "tasks", "notes")
 
     def feature_set(self) -> set[str]:
         raw = (self.enabled_features or "all").strip().lower()

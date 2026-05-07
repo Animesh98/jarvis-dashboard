@@ -29,7 +29,8 @@ ALL_FEATURES = [
     ("docker", "Docker container management"),
     ("system", "System monitoring (CPU/RAM/disk/bandwidth)"),
     ("files", "File explorer"),
-    ("tasks", "Task list"),
+    ("tasks", "Task list (kanban with movie/series links)"),
+    ("notes", "Notes (tagged notes with auto-save)"),
 ]
 
 

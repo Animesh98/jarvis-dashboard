@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Sparkles,
   SquareCheckBig,
+  StickyNote,
 } from 'lucide-react';
 import { useEnabledFeatures, type Feature } from '@/lib/features';
 
@@ -24,6 +25,7 @@ const items: { href: string; label: string; Icon: typeof LayoutGrid; feature: Fe
   { href: '/discover', label: 'Discover', Icon: Sparkles, feature: 'discover' },
   { href: '/files', label: 'Files', Icon: FolderOpen, feature: 'files' },
   { href: '/tasks', label: 'Tasks', Icon: SquareCheckBig, feature: 'tasks' },
+  { href: '/notes', label: 'Notes', Icon: StickyNote, feature: 'notes' },
 ];
 
 export default memo(function MobileNav() {

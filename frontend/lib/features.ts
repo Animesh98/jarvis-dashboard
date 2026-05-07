@@ -4,9 +4,26 @@ import { useEffect, useState } from 'react';
 
 // Keys must match what backend's config.py reports.
 // 'discover' is always on server-side; frontend treats it the same.
-export type Feature = 'system' | 'docker' | 'torrents' | 'media' | 'discover' | 'files' | 'tasks';
+export type Feature =
+  | 'system'
+  | 'docker'
+  | 'torrents'
+  | 'media'
+  | 'discover'
+  | 'files'
+  | 'tasks'
+  | 'notes';
 
-const ALL: Feature[] = ['system', 'docker', 'torrents', 'media', 'discover', 'files', 'tasks'];
+const ALL: Feature[] = [
+  'system',
+  'docker',
+  'torrents',
+  'media',
+  'discover',
+  'files',
+  'tasks',
+  'notes',
+];
 
 let cache: Set<Feature> | null = null;
 let inflight: Promise<Set<Feature>> | null = null;

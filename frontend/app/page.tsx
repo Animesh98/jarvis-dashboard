@@ -5,10 +5,14 @@ import { useData } from '@/lib/DataContext';
 import { MiniGauge } from '@/components/Gauge';
 import { fmtSpeed } from '@/lib/api';
 import { Cpu, Container, ArrowDownUp, Film, Wifi, CloudSun, ChevronRight } from 'lucide-react';
+import TodayWidget from '@/components/TodayWidget';
+import { useEnabledFeatures } from '@/lib/features';
 import styles from './page.module.scss';
 
 export default function OverviewPage() {
   const { data } = useData();
+  const features = useEnabledFeatures();
+  const tasksEnabled = !features || features.has('tasks');
   const { sys, containers, torrents, transfer, counts, sessions, weather } = data;
 
   const cpuP = sys ? Math.min(Math.round((sys.cpu_load[0] / sys.cpu_count) * 100), 100) : 0;
@@ -74,6 +78,9 @@ export default function OverviewPage() {
             </div>
             <ChevronRight size={14} className={styles.arrow} />
           </Link>
+
+          {/* Today's tasks */}
+          {tasksEnabled && <TodayWidget />}
 
           {/* Docker */}
           <Link href="/docker" prefetch={true} className={`metric-card ${styles.dockerCard}`}>

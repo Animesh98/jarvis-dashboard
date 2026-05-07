@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { api, fmtBytes } from '@/lib/api';
+import { api } from '@/lib/api';
 import { toast } from '@/lib/toast';
+import TorrentSearchModal from '@/components/TorrentSearchModal';
 import {
   Sparkles,
   Search,
@@ -24,8 +25,6 @@ import {
   Ghost,
   Clapperboard,
   Palette,
-  ArrowUp,
-  ArrowDown,
   X,
   Loader2,
   Bookmark,
@@ -163,95 +162,6 @@ interface SeasonInfo {
   complete: boolean;
   torrent_query: string;
   poster: string;
-}
-
-function TorrentSearchModal({
-  query,
-  onClose,
-  category,
-}: {
-  query: string;
-  onClose: () => void;
-  category?: string;
-}) {
-  const [results, setResults] = useState<any[] | null>(null);
-  const [searching, setSearching] = useState(true);
-
-  useEffect(() => {
-    async function search() {
-      setSearching(true);
-      const r = await api(`/api/torrent-search?q=${encodeURIComponent(query)}`);
-      setSearching(false);
-      if (r.error || !Array.isArray(r.data)) {
-        setResults([]);
-      } else {
-        setResults(r.data);
-      }
-    }
-    search();
-  }, [query]);
-
-  async function addTorrent(hash: string, name: string) {
-    const magnet = `magnet:?xt=urn:btih:${hash}&dn=${encodeURIComponent(name)}`;
-    const r = await api('/api/torrent-add', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ magnet, category: category || '' }),
-    });
-    toast(r.error ? r.error : `Added: ${name.substring(0, 50)}`, r.error ? 'error' : 'success');
-    onClose();
-  }
-
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h3>Torrents for: {query}</h3>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>
-            <X size={16} />
-          </button>
-        </div>
-        <div className={styles.modalBody}>
-          {searching ? (
-            <div className={styles.loadingState}>
-              <Loader2 size={20} className={styles.spinner} /> Searching...
-            </div>
-          ) : results && results.length === 0 ? (
-            <div className="empty-state" style={{ padding: 16 }}>
-              No torrents found
-            </div>
-          ) : (
-            results && (
-              <div className="stagger-children">
-                {results.map((r, i) => (
-                  <div key={i} className={styles.torrentResult}>
-                    <span className={styles.torrentName} title={r.name}>
-                      {r.name}
-                    </span>
-                    <span className={styles.torrentMeta}>{fmtBytes(r.size)}</span>
-                    <span className={styles.torrentSeeds}>
-                      <ArrowUp size={10} />
-                      {r.seeders}
-                    </span>
-                    <span className={styles.torrentMeta}>
-                      <ArrowDown size={10} />
-                      {r.leechers}
-                    </span>
-                    <button
-                      className={`btn btn-sm ${styles.addBtn}`}
-                      onClick={() => addTorrent(r.info_hash, r.name)}
-                    >
-                      <Plus size={12} /> Add
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )
-          )}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function SeriesSeasonModal({ rec, onClose }: { rec: Recommendation; onClose: () => void }) {

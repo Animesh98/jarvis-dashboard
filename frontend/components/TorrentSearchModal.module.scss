@@ -1,0 +1,145 @@
+@use '../styles/variables' as *;
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-xl;
+  animation: fadeInOverlay $duration-fast $ease-smooth both;
+}
+
+.modal {
+  @include card;
+  width: 100%;
+  max-width: 700px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUpModal $duration-normal $ease-smooth both;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-lg $space-xl;
+  border-bottom: 1px solid var(--subtle-border);
+
+  h3 {
+    font-size: $text-base;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0;
+  }
+}
+
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: $space-sm 0;
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-sm;
+  padding: $space-3xl;
+  color: var(--text-tertiary);
+  font-size: $text-base;
+}
+
+.spinner {
+  animation: spinTorrent 1s linear infinite;
+}
+
+.torrentResult {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: 10px $space-xl;
+  border-bottom: 1px solid var(--row-border);
+  font-size: $text-sm;
+  transition: background $duration-fast;
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: var(--row-border);
+  }
+}
+
+.torrentName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+.torrentMeta {
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.torrentSeeds {
+  font-family: $font-mono;
+  font-size: $text-xs;
+  color: $green;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.addBtn {
+  background: rgba($green, 0.1) !important;
+  color: $green !important;
+  &:hover {
+    background: rgba($green, 0.18) !important;
+    box-shadow: 0 2px 8px rgba($green, 0.15) !important;
+  }
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUpModal {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spinTorrent {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
