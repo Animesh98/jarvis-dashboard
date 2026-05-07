@@ -206,9 +206,7 @@ export default function NotesPage() {
       </header>
 
       <div className={`page-body ${styles.bodyContainer}`}>
-        <div
-          className={`${styles.layout} ${mobileEditing ? styles.layoutMobileEditing : ''}`}
-        >
+        <div className={`${styles.layout} ${mobileEditing ? styles.layoutMobileEditing : ''}`}>
           {/* List Pane */}
           <aside className={styles.listPane}>
             <div className={styles.listToolbar}>
@@ -288,9 +286,7 @@ export default function NotesPage() {
                       </h3>
                       <span className={styles.noteCardDate}>{timeAgo(n.updated_at)}</span>
                     </div>
-                    {n.content && (
-                      <p className={styles.noteCardPreview}>{previewOf(n.content)}</p>
-                    )}
+                    {n.content && <p className={styles.noteCardPreview}>{previewOf(n.content)}</p>}
                     {n.tags && n.tags.length > 0 && (
                       <div className={styles.noteCardTags}>
                         {n.tags.slice(0, 3).map((t) => (
@@ -299,9 +295,7 @@ export default function NotesPage() {
                           </span>
                         ))}
                         {n.tags.length > 3 && (
-                          <span className={styles.noteCardTagMore}>
-                            +{n.tags.length - 3}
-                          </span>
+                          <span className={styles.noteCardTagMore}>+{n.tags.length - 3}</span>
                         )}
                       </div>
                     )}
@@ -336,9 +330,7 @@ export default function NotesPage() {
                   </button>
                   <div className={styles.editorActions}>
                     <button
-                      className={`${styles.editorBtn} ${
-                        draftPinned ? styles.editorBtnActive : ''
-                      }`}
+                      className={`${styles.editorBtn} ${draftPinned ? styles.editorBtnActive : ''}`}
                       onClick={handleTogglePin}
                       title={draftPinned ? 'Unpin' : 'Pin to top'}
                     >
