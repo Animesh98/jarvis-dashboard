@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { api, timeAgo } from '@/lib/api';
 import { toast } from '@/lib/toast';
+import RichEditor from './RichEditor';
 import styles from './page.module.scss';
 
 interface Note {
@@ -29,8 +30,20 @@ interface Note {
 
 const PREVIEW_LEN = 110;
 
+// Strip HTML tags so list-pane previews show readable text, not markup.
+// Notes can be either legacy plain text or HTML produced by the rich editor.
+function htmlToText(s: string): string {
+  if (!s) return '';
+  if (typeof document !== 'undefined') {
+    const div = document.createElement('div');
+    div.innerHTML = s;
+    return div.textContent || div.innerText || '';
+  }
+  return s.replace(/<[^>]+>/g, ' ');
+}
+
 function previewOf(s: string): string {
-  const trimmed = (s || '').replace(/\s+/g, ' ').trim();
+  const trimmed = htmlToText(s).replace(/\s+/g, ' ').trim();
   if (trimmed.length <= PREVIEW_LEN) return trimmed;
   return trimmed.slice(0, PREVIEW_LEN) + '…';
 }
@@ -53,7 +66,6 @@ export default function NotesPage() {
   const [mobileEditing, setMobileEditing] = useState(false);
 
   const titleRef = useRef<HTMLInputElement>(null);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
   const debounceSaveRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const refreshTags = useCallback(async () => {
@@ -385,20 +397,19 @@ export default function NotesPage() {
                   />
                 </div>
 
-                <textarea
-                  ref={contentRef}
-                  className={styles.editorContent}
-                  placeholder="Start writing…"
+                <RichEditor
                   value={draftContent}
-                  onChange={(e) => {
-                    setDraftContent(e.target.value);
+                  selectionKey={selected.id}
+                  onChange={(html) => {
+                    setDraftContent(html);
                     setDirty(true);
                   }}
                 />
 
                 <div className={styles.editorFooter}>
                   <span className={styles.editorMeta}>
-                    Updated {timeAgo(selected.updated_at)} · {draftContent.length} chars
+                    Updated {timeAgo(selected.updated_at)} ·{' '}
+                    {htmlToText(draftContent).trim().length} chars
                   </span>
                 </div>
               </>

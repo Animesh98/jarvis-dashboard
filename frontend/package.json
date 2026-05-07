@@ -12,6 +12,10 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@tiptap/extension-link": "^3.22.5",
+    "@tiptap/extension-placeholder": "^3.22.5",
+    "@tiptap/react": "^3.22.5",
+    "@tiptap/starter-kit": "^3.22.5",
     "lucide-react": "^0.577.0",
     "next": "^16.2.1",
     "react": "^19.2.4",
