@@ -69,11 +69,14 @@ export default function RichEditor({
 
   // Reset content only when the selected note changes — not on every value prop tick
   // (prevents cursor jump while typing, since auto-save updates the parent).
+  // emitUpdate: false is critical — TipTap v3's setContent defaults to firing
+  // the update event, which would call onChange → setDirty(true) and trigger
+  // an autosave just for opening a note, bumping updated_at without any edit.
   useEffect(() => {
     if (!editor) return;
     if (selectionKey === lastLoadedKey.current) return;
     lastLoadedKey.current = selectionKey;
-    editor.commands.setContent(value || '');
+    editor.commands.setContent(value || '', { emitUpdate: false });
   }, [editor, selectionKey, value]);
 
   if (!editor) return <div className={styles.contentArea} />;
