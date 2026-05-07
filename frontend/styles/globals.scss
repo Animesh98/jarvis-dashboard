@@ -407,6 +407,10 @@ body {
 }
 
 // Mobile nav
+//
+// Layout strategy: row of icon-only buttons on phones, with horizontal
+// scroll as a safety net for very narrow screens / landscape on tiny
+// devices. Auto-scrolls active tab into center via JS in MobileNav.tsx.
 .mobile-nav {
   display: none;
   position: fixed;
@@ -416,15 +420,46 @@ body {
   z-index: 50;
   @include glass;
   border-top: 1px solid var(--glass-border);
-  padding: $space-xs;
+  padding: $space-xs $space-sm;
   padding-bottom: calc(#{$space-xs} + env(safe-area-inset-bottom, 0px));
-  justify-content: space-around;
+  gap: 2px;
+
+  // Scroll fallback when items can't all fit
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; // Firefox
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none; // Safari / Chrome
+  }
+
+  // Subtle edge mask hints at scrollable content when overflowing.
+  // No-op visually when content fits (mask edges land beyond items).
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 14px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 14px),
+    transparent 100%
+  );
+
   transition:
     background $duration-slow $ease-smooth,
     border-color $duration-slow $ease-smooth;
 
   @include mobile {
     display: flex;
+    justify-content: space-around;
   }
 }
 
@@ -432,9 +467,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  padding: $space-xs 6px;
-  border-radius: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
   background: none;
   border: none;
   color: var(--text-tertiary);
@@ -443,13 +479,20 @@ body {
   cursor: pointer;
   transition:
     color $duration-fast,
+    background $duration-fast,
     transform $duration-normal $ease-spring;
   text-decoration: none;
+  flex: 0 0 auto;
   min-width: 42px;
+  scroll-snap-align: center;
 
   .mobile-nav-icon {
     display: flex;
     transition: transform $duration-normal $ease-spring;
+  }
+
+  .mobile-nav-label {
+    white-space: nowrap;
   }
 
   &:active {
@@ -457,8 +500,24 @@ body {
   }
   &.active {
     color: var(--blue);
+    background: rgba($blue, 0.1);
     .mobile-nav-icon {
       transform: scale(1.1);
+    }
+  }
+}
+
+// Phones: icon-only mode. Removes labels (the 9px text was barely
+// readable anyway), bumps tap target to 44px square, and gives the
+// row enough room to fit all 9 items on standard phone widths.
+@media (max-width: 480px) {
+  .mobile-nav-item {
+    min-width: 44px;
+    padding: 8px 6px;
+    gap: 0;
+
+    .mobile-nav-label {
+      display: none;
     }
   }
 }
