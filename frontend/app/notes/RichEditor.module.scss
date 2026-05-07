@@ -1,0 +1,221 @@
+@use '../../styles/variables' as *;
+
+.editorRoot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+// ── Toolbar ──────────────────────────────────────────────────
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px 4px;
+  margin-bottom: $space-xs;
+  border-bottom: 1px solid var(--subtle-border);
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 5;
+}
+
+.toolbarBtn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--text-secondary) !important;
+  padding: 4px 6px !important;
+  cursor: pointer;
+  border-radius: $radius-sm;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color $duration-fast,
+    background $duration-fast,
+    border-color $duration-fast;
+
+  &:hover:not(:disabled) {
+    color: var(--text-primary) !important;
+    background: var(--bg-tertiary) !important;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.toolbarBtnActive {
+  color: $purple !important;
+  background: rgba($purple, 0.12) !important;
+  border-color: rgba($purple, 0.25) !important;
+
+  &:hover:not(:disabled) {
+    background: rgba($purple, 0.2) !important;
+    color: $purple !important;
+  }
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background: var(--subtle-border);
+  margin: 0 4px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+// ── Editor surface ───────────────────────────────────────────
+.editorSurface {
+  flex: 1;
+  overflow-y: auto;
+  padding: $space-xs 0;
+
+  // ProseMirror's outer wrapper
+  :global(.ProseMirror) {
+    outline: none;
+    min-height: 100%;
+    color: var(--text-primary);
+    font-size: $text-sm;
+    line-height: 1.7;
+    font-family: $font-sans;
+  }
+
+  // Empty placeholder via Tiptap Placeholder extension
+  :global(.ProseMirror p.is-editor-empty:first-child::before) {
+    content: attr(data-placeholder);
+    color: var(--text-tertiary);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  // Prose styling — keeps consistency with dashboard tokens
+  :global(.ProseMirror) {
+    p {
+      margin: 0 0 $space-sm;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: $font-rounded;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin: $space-md 0 $space-sm;
+      line-height: 1.3;
+    }
+    h1 {
+      font-size: $text-2xl;
+    }
+    h2 {
+      font-size: $text-xl;
+    }
+    h3 {
+      font-size: $text-lg;
+    }
+
+    ul,
+    ol {
+      padding-left: $space-xl;
+      margin: 0 0 $space-sm;
+    }
+    ul {
+      list-style: disc;
+    }
+    ol {
+      list-style: decimal;
+    }
+    li {
+      margin: 2px 0;
+    }
+    li > p {
+      margin: 0;
+    }
+
+    blockquote {
+      margin: $space-sm 0;
+      padding: 4px $space-md;
+      border-left: 3px solid rgba($purple, 0.5);
+      color: var(--text-secondary);
+      background: rgba($purple, 0.05);
+      border-radius: 0 $radius-sm $radius-sm 0;
+
+      p {
+        margin: 0;
+      }
+    }
+
+    code {
+      font-family: $font-mono;
+      font-size: 0.85em;
+      background: var(--bg-tertiary);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: $orange;
+      border: 1px solid var(--subtle-border);
+    }
+
+    pre {
+      font-family: $font-mono;
+      font-size: $text-xs;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--subtle-border);
+      border-radius: $radius-sm;
+      padding: $space-sm $space-md;
+      margin: $space-sm 0;
+      overflow-x: auto;
+      line-height: 1.5;
+
+      code {
+        background: transparent;
+        border: none;
+        padding: 0;
+        color: var(--text-primary);
+        font-size: inherit;
+      }
+    }
+
+    a {
+      color: $purple;
+      text-decoration: underline;
+      text-decoration-color: rgba($purple, 0.4);
+      text-underline-offset: 2px;
+
+      &:hover {
+        text-decoration-color: $purple;
+      }
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--subtle-border);
+      margin: $space-md 0;
+    }
+
+    strong {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    s {
+      text-decoration-color: var(--text-tertiary);
+    }
+  }
+}
+
+// Fallback when editor not yet initialized
+.contentArea {
+  flex: 1;
+  outline: none;
+}
