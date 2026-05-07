@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from '@/lib/toast';
+import TaskSmartActions from './TaskSmartActions';
+import PortalDropdown from './PortalDropdown';
 import styles from './page.module.scss';
 
 interface Entity {
@@ -272,6 +274,7 @@ function EditTaskForm({
   const [activeIdx, setActiveIdx] = useState(0);
   const [entities, setEntities] = useState<Entity[]>([...task.entities]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
@@ -350,9 +353,13 @@ function EditTaskForm({
   };
 
   return (
-    <div className={styles.editForm} onClick={(e) => e.stopPropagation()}>
-      {showSuggestions && suggestions.length > 0 && (
-        <div className={`${styles.autocomplete} ${styles.autocompleteUp}`}>
+    <div className={styles.editForm} ref={formRef} onClick={(e) => e.stopPropagation()}>
+      <PortalDropdown
+        anchorRef={formRef}
+        open={showSuggestions && suggestions.length > 0}
+        prefer="up"
+      >
+        <div className={styles.autocomplete}>
           {suggestions.map((s, i) => (
             <div
               key={s.tmdb_id || i}
@@ -369,7 +376,7 @@ function EditTaskForm({
             </div>
           ))}
         </div>
-      )}
+      </PortalDropdown>
       <textarea
         ref={inputRef}
         className={styles.editInput}
@@ -438,6 +445,11 @@ function TaskCard({
           ) : (
             <>
               <div className={styles.taskContent}>{renderTitle(task.title, task.entities)}</div>
+              <TaskSmartActions
+                title={task.title}
+                entities={task.entities}
+                isDone={task.column === 'done'}
+              />
               <div className={styles.taskFooter}>
                 <span className={styles.taskDate}>
                   {new Date(task.created_at).toLocaleTimeString('en-GB', {
@@ -503,7 +515,6 @@ function AddTaskForm({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const [entities, setEntities] = useState<Entity[]>([]);
-  const [dropUp, setDropUp] = useState(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -511,15 +522,6 @@ function AddTaskForm({
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-  useEffect(() => {
-    if (showSuggestions && formRef.current) {
-      const rect = formRef.current.getBoundingClientRect();
-      const spaceAbove = rect.top;
-      const spaceBelow = window.innerHeight - rect.bottom;
-      setDropUp(spaceAbove > spaceBelow);
-    }
-  }, [showSuggestions]);
 
   const handleChange = (text: string) => {
     setValue(text);
@@ -590,10 +592,12 @@ function AddTaskForm({
 
   return (
     <div className={styles.addForm} ref={formRef}>
-      {showSuggestions && suggestions.length > 0 && (
-        <div
-          className={`${styles.autocomplete} ${dropUp ? styles.autocompleteUp : styles.autocompleteDown}`}
-        >
+      <PortalDropdown
+        anchorRef={formRef}
+        open={showSuggestions && suggestions.length > 0}
+        prefer="up"
+      >
+        <div className={styles.autocomplete}>
           {suggestions.map((s, i) => (
             <div
               key={s.tmdb_id || i}
@@ -610,7 +614,7 @@ function AddTaskForm({
             </div>
           ))}
         </div>
-      )}
+      </PortalDropdown>
       <textarea
         ref={inputRef}
         className={styles.addInput}
