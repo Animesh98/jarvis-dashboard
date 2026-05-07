@@ -20,7 +20,11 @@ const DOWNLOAD_WORDS = ['download', 'get', 'grab', 'torrent', 'fetch'];
 
 function detectVerb(title: string): Verb {
   const stripped = title.replace(/\{\{(.+?)\}\}/g, '$1').trim();
-  const firstWord = stripped.split(/\s+/)[0]?.toLowerCase().replace(/[^a-z]/g, '') || '';
+  const firstWord =
+    stripped
+      .split(/\s+/)[0]
+      ?.toLowerCase()
+      .replace(/[^a-z]/g, '') || '';
   if (WATCH_WORDS.includes(firstWord)) return 'watch';
   if (DOWNLOAD_WORDS.includes(firstWord)) return 'download';
   return 'discover';

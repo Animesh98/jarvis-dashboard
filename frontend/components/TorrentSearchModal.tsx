@@ -36,9 +36,7 @@ export default function TorrentSearchModal({
     let cancelled = false;
     async function search() {
       setSearching(true);
-      const r = await api<TorrentResult[]>(
-        `/api/torrent-search?q=${encodeURIComponent(query)}`
-      );
+      const r = await api<TorrentResult[]>(`/api/torrent-search?q=${encodeURIComponent(query)}`);
       if (cancelled) return;
       setSearching(false);
       if (r.error || !Array.isArray(r.data)) {

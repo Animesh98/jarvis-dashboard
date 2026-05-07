@@ -75,9 +75,7 @@ export default function PortalDropdown({
     left: pos.left,
     width: pos.width,
     zIndex: 1000,
-    ...(pos.placement === 'up'
-      ? { bottom: window.innerHeight - pos.top }
-      : { top: pos.top }),
+    ...(pos.placement === 'up' ? { bottom: window.innerHeight - pos.top } : { top: pos.top }),
   };
 
   return createPortal(<div style={style}>{children}</div>, document.body);
