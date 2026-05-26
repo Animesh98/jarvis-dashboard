@@ -29,6 +29,11 @@ def list_dir(path: str = ""):
     return files_svc.list_dir(path)
 
 
+@router.get("/read")
+def read(path: str = ""):
+    return files_svc.read_text(path)
+
+
 @router.get("/download")
 def download(path: str = ""):
     real = files_svc.download_path(path)

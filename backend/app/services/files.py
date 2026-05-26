@@ -118,3 +118,36 @@ def download_path(rel_path: str) -> str | None:
     if not os.path.isfile(full):
         return None
     return full
+
+
+MAX_VIEW_BYTES = 2 * 1024 * 1024  # 2 MB
+
+
+def read_text(rel_path: str) -> dict:
+    full = _resolve_path(rel_path)
+    if not os.path.isfile(full):
+        return {"error": "Not a file"}
+    try:
+        size = os.path.getsize(full)
+    except OSError as e:
+        return {"error": str(e)}
+    if size > MAX_VIEW_BYTES:
+        return {"error": f"File too large to view ({size} bytes; max {MAX_VIEW_BYTES})"}
+    try:
+        with open(full, "rb") as fh:
+            raw = fh.read()
+    except Exception as e:
+        return {"error": str(e)}
+    if b"\x00" in raw[:8192]:
+        return {"error": "Binary file — cannot preview"}
+    for enc in ("utf-8", "utf-8-sig", "latin-1"):
+        try:
+            content = raw.decode(enc)
+            break
+        except UnicodeDecodeError:
+            content = None
+    if content is None:
+        return {"error": "Cannot decode file as text"}
+    name = os.path.basename(full)
+    _, ext = os.path.splitext(name)
+    return {"name": name, "ext": ext.lower().lstrip("."), "size": size, "content": content}
