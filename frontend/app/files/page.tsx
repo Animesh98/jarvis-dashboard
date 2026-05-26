@@ -136,7 +136,7 @@ export default function FilesPage() {
     error?: string;
   } | null>(null);
 
-  const openViewer = useCallback(async (path: string) => {
+  const openViewer = async (path: string) => {
     const name = path.split('/').pop() || path;
     const ext = getExt(name);
     setViewer({ name, ext, content: '', loading: true });
@@ -151,7 +151,7 @@ export default function FilesPage() {
       content: r.data.content || '',
       loading: false,
     });
-  }, []);
+  };
 
   useEffect(() => {
     if (!viewer) return;
@@ -381,7 +381,7 @@ export default function FilesPage() {
             {!loading && items.length === 0 && <div className="empty-state">Empty directory</div>}
 
             {!loading &&
-              items.map((item, idx) => {
+              items.map((item) => {
                 const absPath = currentPath + (currentPath.endsWith('/') ? '' : '/') + item.name;
                 return (
                   <FileRow
