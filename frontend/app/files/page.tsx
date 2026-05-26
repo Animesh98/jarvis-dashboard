@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback, useRef, memo } from 'react';
+import { useState, useCallback, useRef, memo, useEffect } from 'react';
 import { api, fmtBytes } from '@/lib/api';
 import { toast } from '@/lib/toast';
+import { marked } from 'marked';
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,12 +15,79 @@ import {
   Folder,
   FileText,
   Download,
+  Eye,
   Pencil,
   Copy,
   Scissors,
   Trash2,
+  X,
 } from 'lucide-react';
 import styles from './page.module.scss';
+
+const MD_EXTS = new Set(['md', 'markdown', 'mdown', 'mkd']);
+const VIEWABLE_EXTS = new Set([
+  'md',
+  'markdown',
+  'mdown',
+  'mkd',
+  'txt',
+  'log',
+  'json',
+  'yml',
+  'yaml',
+  'toml',
+  'ini',
+  'conf',
+  'cfg',
+  'env',
+  'py',
+  'js',
+  'jsx',
+  'ts',
+  'tsx',
+  'sh',
+  'bash',
+  'zsh',
+  'fish',
+  'css',
+  'scss',
+  'sass',
+  'less',
+  'html',
+  'htm',
+  'xml',
+  'svg',
+  'csv',
+  'tsv',
+  'sql',
+  'rs',
+  'go',
+  'java',
+  'c',
+  'cpp',
+  'h',
+  'hpp',
+  'rb',
+  'php',
+  'lua',
+  'r',
+  'tex',
+  'gitignore',
+  'dockerfile',
+  'makefile',
+]);
+
+function getExt(name: string): string {
+  const dot = name.lastIndexOf('.');
+  return dot >= 0 ? name.slice(dot + 1).toLowerCase() : name.toLowerCase();
+}
+
+function isViewable(name: string, isDir: boolean): boolean {
+  if (isDir) return false;
+  return VIEWABLE_EXTS.has(getExt(name));
+}
+
+marked.setOptions({ gfm: true, breaks: false });
 
 interface FileItem {
   name: string;
@@ -36,6 +104,7 @@ const FileRow = memo(function FileRow({
   onSelect,
   onNavigate,
   onContext,
+  onView,
 }: {
   item: FileItem;
   absPath: string;
@@ -43,6 +112,7 @@ const FileRow = memo(function FileRow({
   onSelect: () => void;
   onNavigate: (p: string) => void;
   onContext: (e: React.MouseEvent) => void;
+  onView: (p: string) => void;
 }) {
   const mod = item.modified
     ? new Date(item.modified * 1000).toLocaleDateString('en-GB', {
@@ -56,11 +126,15 @@ const FileRow = memo(function FileRow({
     <div
       className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`}
       onClick={onSelect}
-      onDoubleClick={() =>
-        item.is_dir
-          ? onNavigate(absPath)
-          : window.open(`/api/files/download?path=${encodeURIComponent(absPath)}`, '_blank')
-      }
+      onDoubleClick={() => {
+        if (item.is_dir) {
+          onNavigate(absPath);
+        } else if (MD_EXTS.has(getExt(item.name))) {
+          onView(absPath);
+        } else {
+          window.open(`/api/files/download?path=${encodeURIComponent(absPath)}`, '_blank');
+        }
+      }}
       onContextMenu={onContext}
     >
       <span className={styles.icon}>
@@ -97,6 +171,39 @@ export default function FilesPage() {
     item: FileItem;
     absPath: string;
   } | null>(null);
+  const [viewer, setViewer] = useState<{
+    name: string;
+    ext: string;
+    content: string;
+    loading: boolean;
+    error?: string;
+  } | null>(null);
+
+  const openViewer = async (path: string) => {
+    const name = path.split('/').pop() || path;
+    const ext = getExt(name);
+    setViewer({ name, ext, content: '', loading: true });
+    const r = await api(`/api/files/read?path=${encodeURIComponent(path)}`);
+    if (r.data?.error || r.error) {
+      setViewer({ name, ext, content: '', loading: false, error: r.data?.error || r.error });
+      return;
+    }
+    setViewer({
+      name: r.data.name || name,
+      ext: r.data.ext || ext,
+      content: r.data.content || '',
+      loading: false,
+    });
+  };
+
+  useEffect(() => {
+    if (!viewer) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setViewer(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [viewer]);
 
   const navigate = useCallback(
     async (path: string, addToHistory = true) => {
@@ -163,6 +270,10 @@ export default function FilesPage() {
       selected.is_dir
         ? navigate(selected.path)
         : window.open(`/api/files/download?path=${encodeURIComponent(selected.path)}`, '_blank');
+    } else if (action === 'view') {
+      setCtxMenu(null);
+      openViewer(selected.path);
+      return;
     } else if (action === 'rename') {
       const n = await showModal('Rename', 'New name…', selected.name);
       if (!n || n === selected.name) return;
@@ -313,7 +424,7 @@ export default function FilesPage() {
             {!loading && items.length === 0 && <div className="empty-state">Empty directory</div>}
 
             {!loading &&
-              items.map((item, idx) => {
+              items.map((item) => {
                 const absPath = currentPath + (currentPath.endsWith('/') ? '' : '/') + item.name;
                 return (
                   <FileRow
@@ -325,6 +436,7 @@ export default function FilesPage() {
                       setSelected({ path: absPath, name: item.name, is_dir: item.is_dir })
                     }
                     onNavigate={navigate}
+                    onView={openViewer}
                     onContext={(e) => {
                       e.preventDefault();
                       setSelected({ path: absPath, name: item.name, is_dir: item.is_dir });
@@ -353,6 +465,9 @@ export default function FilesPage() {
                 action: 'open',
                 Icon: ctxMenu.item.is_dir ? Folder : Download,
               },
+              ...(isViewable(ctxMenu.item.name, ctxMenu.item.is_dir)
+                ? [{ label: 'View', action: 'view', Icon: Eye }]
+                : []),
               { label: 'Rename', action: 'rename', Icon: Pencil },
               { label: 'Copy', action: 'copy', Icon: Copy },
               { label: 'Move', action: 'move', Icon: Scissors },
@@ -368,6 +483,44 @@ export default function FilesPage() {
             ))}
           </div>
         </>
+      )}
+
+      {viewer && (
+        <div className={styles.viewerOverlay} onClick={() => setViewer(null)}>
+          <div className={styles.viewer} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.viewerHeader}>
+              <div className={styles.viewerTitle}>
+                <FileText size={16} />
+                <span>{viewer.name}</span>
+                {viewer.ext && <span className={styles.viewerExt}>{viewer.ext}</span>}
+              </div>
+              <button
+                className={styles.viewerClose}
+                onClick={() => setViewer(null)}
+                aria-label="Close viewer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className={styles.viewerBody}>
+              {viewer.loading && <div className="empty-state">Loading…</div>}
+              {viewer.error && (
+                <div className="empty-state" style={{ color: 'var(--text-secondary)' }}>
+                  {viewer.error}
+                </div>
+              )}
+              {!viewer.loading && !viewer.error && MD_EXTS.has(viewer.ext) && (
+                <div
+                  className={styles.markdown}
+                  dangerouslySetInnerHTML={{ __html: marked.parse(viewer.content) as string }}
+                />
+              )}
+              {!viewer.loading && !viewer.error && !MD_EXTS.has(viewer.ext) && (
+                <pre className={styles.code}>{viewer.content}</pre>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {modal && (
