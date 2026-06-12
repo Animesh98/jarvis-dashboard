@@ -73,6 +73,10 @@ export default function NotesPage() {
   useEffect(() => {
     selectedIdRef.current = selectedId;
   }, [selectedId]);
+  // Tracks which note id the draft state currently represents. Lets us
+  // ignore unrelated `notes` updates (e.g. post-save sync) so the user's
+  // in-progress edits aren't overwritten by hydrate.
+  const hydratedForRef = useRef<string | null>(null);
 
   const refreshTags = useCallback(async () => {
     const r = await api<{ tags: string[] }>('/api/notes/tags');
@@ -96,26 +100,37 @@ export default function NotesPage() {
     refreshTags();
   }, [refreshTags]);
 
-  // Hydrate editor when selection changes. Guarded by hydratedIdRef so that
-  // background setNotes calls (autosave responses, search reloads) don't
-  // overwrite drafts the user is still typing.
-  const hydratedIdRef = useRef<string | null>(null);
+  // Hydrate editor when selection changes. Only runs when `selectedId`
+  // moves to a different note than the one currently loaded into the
+  // draft — so background `notes` refreshes (post-save sync) don't blow
+  // away in-progress edits.
   useEffect(() => {
-    if (selectedId === hydratedIdRef.current) return;
+    if (selectedId === hydratedForRef.current) return;
     const note = notes.find((n) => n.id === selectedId);
-    if (note) {
-      hydratedIdRef.current = selectedId;
-      setDraftTitle(note.title);
-      setDraftContent(note.content);
-      setDraftTags(note.tags || []);
-      setDraftPinned(note.pinned);
-      setDirty(false);
-    }
+    if (!note) return;
+    hydratedForRef.current = selectedId;
+    setDraftTitle(note.title);
+    setDraftContent(note.content);
+    setDraftTags(note.tags || []);
+    setDraftPinned(note.pinned);
+    setTagInput('');
+    setDirty(false);
   }, [selectedId, notes]);
 
-  // Auto-select first note on load if nothing selected
+  // Auto-select first note on load if nothing selected. We hydrate
+  // synchronously in the same commit so the editor never renders with
+  // a fresh selectionKey but stale (empty) draft content.
   useEffect(() => {
-    if (!selectedId && notes.length > 0) setSelectedId(notes[0].id);
+    if (selectedId || notes.length === 0) return;
+    const first = notes[0];
+    hydratedForRef.current = first.id;
+    setDraftTitle(first.title);
+    setDraftContent(first.content);
+    setDraftTags(first.tags || []);
+    setDraftPinned(first.pinned);
+    setTagInput('');
+    setDirty(false);
+    setSelectedId(first.id);
   }, [notes, selectedId]);
 
   const persist = useCallback(
@@ -174,6 +189,34 @@ export default function NotesPage() {
     return () => clearTimeout(debounceSaveRef.current);
   }, [dirty, selectedId, draftTitle, draftContent, draftTags, draftPinned, persist]);
 
+  // Hydrate the editor draft to a specific note synchronously, so the
+  // first render after a selection change already has matching
+  // (selectionKey, value) — otherwise RichEditor's setContent would copy
+  // the previous note's HTML into the newly selected note.
+  const hydrateDraftFrom = useCallback((note: Note) => {
+    hydratedForRef.current = note.id;
+    setDraftTitle(note.title);
+    setDraftContent(note.content);
+    setDraftTags(note.tags || []);
+    setDraftPinned(note.pinned);
+    setTagInput('');
+    setDirty(false);
+  }, []);
+
+  const selectNote = useCallback(
+    (note: Note) => {
+      if (note.id === selectedId) {
+        setMobileEditing(true);
+        return;
+      }
+      flushPending();
+      hydrateDraftFrom(note);
+      setSelectedId(note.id);
+      setMobileEditing(true);
+    },
+    [selectedId, flushPending, hydrateDraftFrom]
+  );
+
   const handleNew = async () => {
     flushPending();
     const r = await api<Note>('/api/notes', {
@@ -183,6 +226,7 @@ export default function NotesPage() {
     });
     if (r.data) {
       setNotes((prev) => [r.data!, ...prev]);
+      hydrateDraftFrom(r.data);
       setSelectedId(r.data.id);
       setMobileEditing(true);
       setTimeout(() => titleRef.current?.focus(), 50);
@@ -198,6 +242,12 @@ export default function NotesPage() {
     const prevNotes = notes;
     setNotes((prev) => prev.filter((n) => n.id !== id));
     if (selectedId === id) {
+      // Cancel any pending save for the note we're about to delete.
+      if (debounceSaveRef.current) {
+        clearTimeout(debounceSaveRef.current);
+        debounceSaveRef.current = undefined;
+      }
+      hydratedForRef.current = null;
       setSelectedId(null);
       setMobileEditing(false);
     }
@@ -332,11 +382,7 @@ export default function NotesPage() {
                     className={`${styles.noteCard} ${
                       selectedId === n.id ? styles.noteCardActive : ''
                     } ${n.pinned ? styles.noteCardPinned : ''}`}
-                    onClick={() => {
-                      if (n.id !== selectedId) flushPending();
-                      setSelectedId(n.id);
-                      setMobileEditing(true);
-                    }}
+                    onClick={() => selectNote(n)}
                   >
                     <div className={styles.noteCardHeader}>
                       <h3 className={styles.noteCardTitle}>
