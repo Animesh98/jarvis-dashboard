@@ -6,13 +6,12 @@ services:
     env_file: .env
     volumes:
       # docker.sock is mounted read-write because /api/docker/action needs to
-      # start/stop/restart containers. Trust model: the backend sits behind
-      # the Next.js proxy on the same host (and the API_KEY middleware if
-      # enabled), so the socket is never reachable from the network.
+      # start/stop/restart containers. Trust model: every /api request must
+      # carry the API_KEY (no localhost bypass), and the backend port is not
+      # published — only the frontend container reaches it over the compose
+      # network. Set API_KEY in .env; without it the API is open.
       - /var/run/docker.sock:/var/run/docker.sock
       - backend-data:/app/data
-    ports:
-      - "8002:8002"
 
   frontend:
     build:
