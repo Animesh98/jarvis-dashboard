@@ -10,6 +10,7 @@ from app.config import settings
 from app.middleware import APIKeyMiddleware
 from app.routers import (
     actions,
+    auth,
     docker,
     files,
     media,
@@ -100,6 +101,7 @@ if settings.feature_enabled("tasks"):
 if settings.feature_enabled("notes"):
     app.include_router(notes.router)
 app.include_router(watchlist.router)
+app.include_router(auth.router)
 app.include_router(_tmdb_img_router)
 
 

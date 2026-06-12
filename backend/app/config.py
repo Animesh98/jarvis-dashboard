@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # Generate one with: python3 -c "import secrets; print(secrets.token_urlsafe(32))"
     api_key: str = ""
 
+    # Human-memorable unlock password. When set, POST /api/auth/unlock
+    # exchanges it for the API key so new devices never need the raw key.
+    dashboard_password: str = ""
+
     # Comma-separated list of enabled feature modules, or "all" (default).
     # Recognized: system,docker,torrents,media,discover,files,tasks,notes
     # `discover` is always on regardless of this setting.
