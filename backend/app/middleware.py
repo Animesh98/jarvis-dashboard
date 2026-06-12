@@ -33,6 +33,8 @@ _PUBLIC_PATHS = {
     "/openapi.json",
     "/redoc",
     "/api/config/features",
+    # Password → API key exchange; does its own auth (see routers/auth.py)
+    "/api/auth/unlock",
 }
 
 # Prefixes that never require the key — read-only image proxies consumed
