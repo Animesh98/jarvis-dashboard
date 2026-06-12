@@ -5,6 +5,7 @@ import { useData } from '@/lib/DataContext';
 import { api, colorForPercent } from '@/lib/api';
 import { toast } from '@/lib/toast';
 import { RotateCcw, Square, Play, ScrollText } from 'lucide-react';
+import ConfirmModal from '@/components/ConfirmModal';
 import styles from './page.module.scss';
 
 const LogPanel = lazy(() => import('@/components/LogPanel'));
@@ -13,6 +14,11 @@ export default function DockerPage() {
   const { data, refreshFast } = useData();
   const { containers, stats } = data;
   const [logContainer, setLogContainer] = useState<string | null>(null);
+  const [working, setWorking] = useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<{
+    container: string;
+    action: 'stop' | 'restart';
+  } | null>(null);
 
   const statsMap: Record<string, any> = {};
   if (Array.isArray(stats))
@@ -31,11 +37,14 @@ export default function DockerPage() {
   const running = sorted.filter((c) => c.State === 'running').length;
 
   async function doAction(container: string, action: string) {
+    if (working) return;
+    setWorking(container);
     const r = await api('/api/docker/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ container, action }),
     });
+    setWorking(null);
     toast(r.data?.message || r.error || 'Done', r.error ? 'error' : 'success');
     setTimeout(refreshFast, 1500);
   }
@@ -102,16 +111,20 @@ export default function DockerPage() {
                 <div className={styles.containerActions}>
                   <button
                     className="btn btn-ghost btn-sm"
-                    onClick={() => doAction(name, 'restart')}
+                    onClick={() => setConfirmTarget({ container: name, action: 'restart' })}
+                    disabled={working === name}
                     title="Restart"
+                    aria-label={`Restart ${name}`}
                   >
                     <RotateCcw size={13} />
                   </button>
                   {isRun ? (
                     <button
                       className="btn btn-danger btn-sm"
-                      onClick={() => doAction(name, 'stop')}
+                      onClick={() => setConfirmTarget({ container: name, action: 'stop' })}
+                      disabled={working === name}
                       title="Stop"
+                      aria-label={`Stop ${name}`}
                     >
                       <Square size={12} />
                     </button>
@@ -119,7 +132,9 @@ export default function DockerPage() {
                     <button
                       className="btn btn-primary btn-sm"
                       onClick={() => doAction(name, 'start')}
+                      disabled={working === name}
                       title="Start"
+                      aria-label={`Start ${name}`}
                     >
                       <Play size={12} />
                     </button>
@@ -138,6 +153,24 @@ export default function DockerPage() {
           <LogPanel container={logContainer} onClose={() => setLogContainer(null)} />
         )}
       </Suspense>
+
+      <ConfirmModal
+        open={!!confirmTarget}
+        title={confirmTarget?.action === 'stop' ? 'Stop Container' : 'Restart Container'}
+        message={
+          <>
+            {confirmTarget?.action === 'stop' ? 'Stop' : 'Restart'}{' '}
+            <strong>{confirmTarget?.container}</strong>?
+          </>
+        }
+        confirmLabel={confirmTarget?.action === 'stop' ? 'Stop' : 'Restart'}
+        danger={confirmTarget?.action === 'stop'}
+        onConfirm={() => {
+          if (confirmTarget) doAction(confirmTarget.container, confirmTarget.action);
+          setConfirmTarget(null);
+        }}
+        onCancel={() => setConfirmTarget(null)}
+      />
     </>
   );
 }

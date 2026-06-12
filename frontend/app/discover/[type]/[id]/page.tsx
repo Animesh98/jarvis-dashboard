@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { api, getApiKey } from '@/lib/api';
 import { toast } from '@/lib/toast';
 import TorrentSearchModal from '@/components/TorrentSearchModal';
 import {
@@ -116,9 +116,26 @@ export default function MovieDetailPage() {
   const id = params.id as string;
 
   useEffect(() => {
+    // Guards against navigating between detail pages (e.g. via Similar):
+    // late responses for the previous title must not paint over this one.
+    let cancelled = false;
+
     async function load() {
       setLoading(true);
+      // Reset everything carried over from the previous title
+      setDetail(null);
+      setLibraryInfo(null);
+      setYtInfo(null);
+      setExternalRatings(null);
+      setWatchlistStatus({ in_watchlist: false, category: null });
+      setSeasons([]);
+      setExpandedSeason(null);
+      setShowSeasons(false);
+      setShowTrailer(false);
+      setShowWatchlistPicker(false);
+
       const r = await api<MovieDetail>(`/api/recommendations/detail?tmdb_id=${id}&type=${type}`);
+      if (cancelled) return;
       setLoading(false);
       if (r.data && !r.data.error) {
         setDetail(r.data);
@@ -126,13 +143,13 @@ export default function MovieDetailPage() {
         api<{ in_library: boolean; jellyfin_id?: string }>(
           `/api/jellyfin-media/library-check?tmdb_id=${id}&media_type=${type}`
         ).then((lib) => {
-          if (lib.data) setLibraryInfo(lib.data);
+          if (!cancelled && lib.data) setLibraryInfo(lib.data);
         });
 
         api<{ in_watchlist: boolean; category: string | null }>(
           `/api/watchlist/check?tmdb_id=${id}&media_type=${type}`
         ).then((wl) => {
-          if (wl.data) setWatchlistStatus(wl.data);
+          if (!cancelled && wl.data) setWatchlistStatus(wl.data);
         });
 
         // Lazy-load external ratings (IMDB + Letterboxd) — pass known data to avoid redundant TMDB calls
@@ -141,7 +158,7 @@ export default function MovieDetailPage() {
         if (r.data.title) extParams.set('title', r.data.title);
         if (r.data.year) extParams.set('year', r.data.year);
         api<ExternalRatings>(`/api/recommendations/external-ratings?${extParams}`).then((ext) => {
-          if (ext.data) setExternalRatings(ext.data);
+          if (!cancelled && ext.data) setExternalRatings(ext.data);
         });
 
         // YouTube check — only for Indian language content (hi, ta, te, ml, kn, bn, mr, pa, gu, etc.)
@@ -160,15 +177,19 @@ export default function MovieDetailPage() {
           'ur',
         ];
         if (type === 'movie' && indianLangs.includes(r.data.original_language)) {
+          // Raw fetch (not api()) because yt-dlp lookups can take longer
+          // than the api() 15s timeout
+          const key = getApiKey();
           fetch(
             `/api/streaming/youtube?title=${encodeURIComponent(r.data.title)}&year=${encodeURIComponent(r.data.year || '')}`,
             {
+              headers: key ? { 'X-API-Key': key } : undefined,
               signal: AbortSignal.timeout(30000),
             }
           )
             .then((res) => res.json())
             .then((data) => {
-              if (data?.available) setYtInfo(data);
+              if (!cancelled && data?.available) setYtInfo(data);
             })
             .catch(() => {});
         }
@@ -177,6 +198,9 @@ export default function MovieDetailPage() {
       }
     }
     if (id && type) load();
+    return () => {
+      cancelled = true;
+    };
   }, [id, type]);
 
   function formatRuntime(min: number): string {

@@ -45,6 +45,45 @@ interface Recommendation {
   genres?: string[];
 }
 
+// TMDB genre name → id, for filtering suggestions that only carry genre_ids.
+// TV uses bundled genres (10759 Action & Adventure, 10765 Sci-Fi & Fantasy).
+const TMDB_GENRE_IDS: Record<string, number> = {
+  action: 28,
+  adventure: 12,
+  animation: 16,
+  comedy: 35,
+  crime: 80,
+  documentary: 99,
+  drama: 18,
+  family: 10751,
+  fantasy: 14,
+  history: 36,
+  horror: 27,
+  music: 10402,
+  mystery: 9648,
+  romance: 10749,
+  'science fiction': 878,
+  'sci-fi': 878,
+  thriller: 53,
+  war: 10752,
+  western: 37,
+};
+
+function matchesGenre(rec: Recommendation, selected: string): boolean {
+  if (selected === 'all') return true;
+  const s = selected.toLowerCase();
+  if (rec.genres?.some((g) => g.toLowerCase() === s)) return true;
+  const ids = rec.genre_ids;
+  if (!ids) return false;
+  const id = TMDB_GENRE_IDS[s];
+  if (id && ids.includes(id)) return true;
+  if ((s === 'action' || s === 'adventure') && ids.includes(10759)) return true;
+  if ((s === 'science fiction' || s === 'sci-fi' || s === 'fantasy') && ids.includes(10765))
+    return true;
+  if (s === 'war' && ids.includes(10768)) return true;
+  return false;
+}
+
 interface AutocompleteResult {
   title: string;
   year: string;
@@ -272,6 +311,7 @@ export default function DiscoverPage() {
   const [libraryFilterType, setLibraryFilterType] = useState<'all' | 'movie' | 'series'>('all');
   const [libraryFilterGenre, setLibraryFilterGenre] = useState<string>('all');
   const [trendingResults, setTrendingResults] = useState<Recommendation[]>([]);
+  const [trendingLoaded, setTrendingLoaded] = useState(false);
   const [trendingWindow, setTrendingWindow] = useState<'week' | 'day'>('week');
   const [trendingFilterType, setTrendingFilterType] = useState<'all' | 'movie' | 'series'>('all');
   const [loading, setLoading] = useState(false);
@@ -441,12 +481,16 @@ export default function DiscoverPage() {
 
   const loadTrending = useCallback(async (tw: 'week' | 'day' = 'week') => {
     setTrendingResults([]);
+    setTrendingLoaded(false);
     const r = await api<{ results: Recommendation[]; time_window: string }>(
       `/api/recommendations/trending?time_window=${tw}`
     );
     if (r.data && r.data.results) {
       setTrendingResults(r.data.results);
+    } else if (r.error) {
+      toast(`Trending failed: ${r.error}`, 'error');
     }
+    setTrendingLoaded(true);
   }, []);
 
   async function loadWatchlist() {
@@ -850,7 +894,9 @@ export default function DiscoverPage() {
                     <div className={`${styles.recGrid} stagger-children`}>
                       {librarySuggestions
                         .filter(
-                          (rec) => libraryFilterType === 'all' || rec.type === libraryFilterType
+                          (rec) =>
+                            (libraryFilterType === 'all' || rec.type === libraryFilterType) &&
+                            matchesGenre(rec, libraryFilterGenre)
                         )
                         .map((rec, i) => (
                           <RecommendationCard key={i} rec={rec} onAddTorrent={handleAddTorrent} />
@@ -893,10 +939,12 @@ export default function DiscoverPage() {
                 ))}
               </div>
             </div>
-            {trendingResults.length === 0 ? (
+            {!trendingLoaded ? (
               <div className={styles.loadingState}>
                 <Loader2 size={20} className={styles.spinner} /> Loading trending...
               </div>
+            ) : trendingResults.length === 0 ? (
+              <div className="empty-state">Nothing trending right now — try again later</div>
             ) : (
               <div className={`${styles.recGrid} stagger-children`}>
                 {trendingResults

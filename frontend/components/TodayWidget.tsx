@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { SquareCheckBig, Plus, ChevronRight, Check } from 'lucide-react';
 import { api } from '@/lib/api';
+import { toast } from '@/lib/toast';
 import styles from './TodayWidget.module.scss';
 
 interface Entity {
@@ -67,13 +68,17 @@ export default function TodayWidget() {
   const doneCount = tasks.filter((t) => t.column === 'done').length;
 
   const handleToggleDone = async (task: Task) => {
-    // Optimistic
+    // Optimistic, rolled back if the PATCH fails
     setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, column: 'done' } : t)));
-    await api(`/api/tasks/${task.id}`, {
+    const r = await api(`/api/tasks/${task.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ column: 'done' }),
     });
+    if (r.error) {
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, column: task.column } : t)));
+      toast(`Failed to complete task: ${r.error}`, 'error');
+    }
   };
 
   const handleAdd = async () => {
@@ -91,6 +96,9 @@ export default function TodayWidget() {
     });
     if (r.data) {
       setTasks((prev) => [...prev, r.data!]);
+    } else {
+      setDraft(title); // restore what was typed so it isn't lost
+      toast(`Failed to add task: ${r.error || 'unknown error'}`, 'error');
     }
     inputRef.current?.focus();
   };

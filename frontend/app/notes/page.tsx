@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { api, timeAgo } from '@/lib/api';
 import { toast } from '@/lib/toast';
+import ConfirmModal from '@/components/ConfirmModal';
 import RichEditor from './RichEditor';
 import styles from './page.module.scss';
 
@@ -64,9 +65,14 @@ export default function NotesPage() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [mobileEditing, setMobileEditing] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const titleRef = useRef<HTMLInputElement>(null);
   const debounceSaveRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const selectedIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
 
   const refreshTags = useCallback(async () => {
     const r = await api<{ tags: string[] }>('/api/notes/tags');
@@ -90,10 +96,15 @@ export default function NotesPage() {
     refreshTags();
   }, [refreshTags]);
 
-  // Hydrate editor when selection changes
+  // Hydrate editor when selection changes. Guarded by hydratedIdRef so that
+  // background setNotes calls (autosave responses, search reloads) don't
+  // overwrite drafts the user is still typing.
+  const hydratedIdRef = useRef<string | null>(null);
   useEffect(() => {
+    if (selectedId === hydratedIdRef.current) return;
     const note = notes.find((n) => n.id === selectedId);
     if (note) {
+      hydratedIdRef.current = selectedId;
       setDraftTitle(note.title);
       setDraftContent(note.content);
       setDraftTags(note.tags || []);
@@ -118,29 +129,53 @@ export default function NotesPage() {
       setSaving(false);
       if (r.data) {
         setNotes((prev) => prev.map((n) => (n.id === id ? r.data! : n)));
-        setDirty(false);
+        // Only clear the dirty flag if this save is for the note still being
+        // edited and no newer edits are queued behind it
+        if (selectedIdRef.current === id && !pendingRef.current) setDirty(false);
         refreshTags();
+      } else {
+        toast(`Save failed: ${r.error || 'unknown error'}`, 'error');
       }
     },
     [refreshTags]
   );
 
+  // Latest unsaved payload — lets us flush (not lose) a pending save when
+  // the user switches notes or leaves the page inside the debounce window.
+  const pendingRef = useRef<{ id: string; payload: Partial<Note> } | null>(null);
+
+  const flushPending = useCallback(() => {
+    clearTimeout(debounceSaveRef.current);
+    const pending = pendingRef.current;
+    if (pending) {
+      pendingRef.current = null;
+      persist(pending.id, pending.payload);
+    }
+  }, [persist]);
+
+  // Flush any pending save on unmount
+  useEffect(() => () => flushPending(), [flushPending]);
+
   // Debounced auto-save when draft changes
   useEffect(() => {
     if (!dirty || !selectedId) return;
+    const payload = {
+      title: draftTitle || 'Untitled',
+      content: draftContent,
+      tags: draftTags,
+      pinned: draftPinned,
+    };
+    pendingRef.current = { id: selectedId, payload };
     clearTimeout(debounceSaveRef.current);
     debounceSaveRef.current = setTimeout(() => {
-      persist(selectedId, {
-        title: draftTitle || 'Untitled',
-        content: draftContent,
-        tags: draftTags,
-        pinned: draftPinned,
-      });
+      pendingRef.current = null;
+      persist(selectedId, payload);
     }, 600);
     return () => clearTimeout(debounceSaveRef.current);
   }, [dirty, selectedId, draftTitle, draftContent, draftTags, draftPinned, persist]);
 
   const handleNew = async () => {
+    flushPending();
     const r = await api<Note>('/api/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -155,12 +190,23 @@ export default function NotesPage() {
   };
 
   const handleDelete = async (id: string) => {
+    // Drop any pending autosave for the note being deleted
+    if (pendingRef.current?.id === id) {
+      pendingRef.current = null;
+      clearTimeout(debounceSaveRef.current);
+    }
+    const prevNotes = notes;
     setNotes((prev) => prev.filter((n) => n.id !== id));
     if (selectedId === id) {
       setSelectedId(null);
       setMobileEditing(false);
     }
-    await api(`/api/notes/${id}`, { method: 'DELETE' });
+    const r = await api(`/api/notes/${id}`, { method: 'DELETE' });
+    if (r.error) {
+      setNotes(prevNotes);
+      toast(`Delete failed: ${r.error}`, 'error');
+      return;
+    }
     refreshTags();
     toast('Note deleted');
   };
@@ -287,6 +333,7 @@ export default function NotesPage() {
                       selectedId === n.id ? styles.noteCardActive : ''
                     } ${n.pinned ? styles.noteCardPinned : ''}`}
                     onClick={() => {
+                      if (n.id !== selectedId) flushPending();
                       setSelectedId(n.id);
                       setMobileEditing(true);
                     }}
@@ -350,10 +397,9 @@ export default function NotesPage() {
                     </button>
                     <button
                       className={`${styles.editorBtn} ${styles.editorBtnDanger}`}
-                      onClick={() => {
-                        if (confirm('Delete this note?')) handleDelete(selected.id);
-                      }}
+                      onClick={() => setConfirmDeleteId(selected.id)}
                       title="Delete"
+                      aria-label="Delete note"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -398,7 +444,8 @@ export default function NotesPage() {
                 </div>
 
                 <RichEditor
-                  value={draftContent}
+                  key={selected.id}
+                  value={selected.content}
                   selectionKey={selected.id}
                   onChange={(html) => {
                     setDraftContent(html);
@@ -417,6 +464,25 @@ export default function NotesPage() {
           </section>
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!confirmDeleteId}
+        title="Delete Note"
+        message={
+          <>
+            Delete{' '}
+            <strong>{notes.find((n) => n.id === confirmDeleteId)?.title || 'this note'}</strong>?
+            This cannot be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        danger
+        onConfirm={() => {
+          if (confirmDeleteId) handleDelete(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </>
   );
 }
