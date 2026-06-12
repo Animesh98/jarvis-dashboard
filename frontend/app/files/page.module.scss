@@ -498,4 +498,29 @@
   input[type='checkbox'] {
     margin-right: $space-xs;
   }
+
+  pre.mermaid {
+    background: var(--bg-hover);
+    border: 1px solid var(--row-border);
+    padding: $space-lg;
+    border-radius: $radius-md;
+    overflow-x: auto;
+    text-align: center;
+    margin: 0 0 $space-md;
+    // Pre-render fallback while mermaid is loading
+    font-family: $font-mono;
+    font-size: 0.85em;
+    color: var(--text-tertiary);
+    white-space: pre-wrap;
+    &[data-processed='true'] {
+      // After mermaid renders the SVG, hide the source text styling
+      font-family: inherit;
+      color: inherit;
+      white-space: normal;
+      svg {
+        max-width: 100%;
+        height: auto;
+      }
+    }
+  }
 }
