@@ -65,7 +65,11 @@ def _rpc(method: str, arguments: dict | None = None, retry: bool = True) -> dict
             return _rpc(method, arguments, retry=False)
         if resp.status_code != 200:
             return {"error": f"Transmission HTTP {resp.status_code}"}
-        return resp.json()
+        data = resp.json()
+        # Transmission reports RPC failures as HTTP 200 with result != "success"
+        if data.get("result") != "success":
+            return {"error": f"Transmission: {data.get('result', 'unknown error')}"}
+        return data
     except Exception as e:
         return {"error": f"Transmission: {e}"}
 

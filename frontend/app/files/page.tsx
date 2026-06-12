@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useCallback, useRef, memo, useEffect } from 'react';
-import { api, fmtBytes } from '@/lib/api';
+import { api, fmtBytes, withApiKey } from '@/lib/api';
 import { toast } from '@/lib/toast';
+import { copyToClipboard } from '@/lib/clipboard';
+import ConfirmModal from '@/components/ConfirmModal';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
   Home,
-  Slash,
   FolderPlus,
   RefreshCw,
   Folder,
@@ -18,9 +20,11 @@ import {
   Eye,
   Pencil,
   Copy,
+  ClipboardCopy,
   Scissors,
   Trash2,
   X,
+  Search,
 } from 'lucide-react';
 import styles from './page.module.scss';
 
@@ -88,6 +92,35 @@ function isViewable(name: string, isDir: boolean): boolean {
 }
 
 marked.setOptions({ gfm: true, breaks: false });
+marked.use({
+  renderer: {
+    code({ text, lang }: { text: string; lang?: string }) {
+      if ((lang || '').toLowerCase() === 'mermaid') {
+        // Escape only `<` and `&` so mermaid source survives intact for the renderer.
+        const safe = text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        return `<pre class="mermaid">${safe}</pre>`;
+      }
+      return false as unknown as string;
+    },
+  },
+});
+
+let mermaidReady: Promise<typeof import('mermaid').default> | null = null;
+function loadMermaid() {
+  if (!mermaidReady) {
+    mermaidReady = import('mermaid').then((m) => {
+      const mermaid = m.default;
+      const theme =
+        typeof document !== 'undefined' &&
+        document.documentElement.getAttribute('data-theme') === 'light'
+          ? 'default'
+          : 'dark';
+      mermaid.initialize({ startOnLoad: false, theme, securityLevel: 'strict' });
+      return mermaid;
+    });
+  }
+  return mermaidReady;
+}
 
 interface FileItem {
   name: string;
@@ -132,7 +165,10 @@ const FileRow = memo(function FileRow({
         } else if (MD_EXTS.has(getExt(item.name))) {
           onView(absPath);
         } else {
-          window.open(`/api/files/download?path=${encodeURIComponent(absPath)}`, '_blank');
+          window.open(
+            withApiKey(`/api/files/download?path=${encodeURIComponent(absPath)}`),
+            '_blank'
+          );
         }
       }}
       onContextMenu={onContext}
@@ -178,6 +214,13 @@ export default function FilesPage() {
     loading: boolean;
     error?: string;
   } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ path: string; name: string } | null>(null);
+  const [filter, setFilter] = useState('');
+  const [sort, setSort] = useState<{ key: 'name' | 'size' | 'modified'; dir: 1 | -1 }>({
+    key: 'name',
+    dir: 1,
+  });
+  const markdownRef = useRef<HTMLDivElement>(null);
 
   const openViewer = async (path: string) => {
     const name = path.split('/').pop() || path;
@@ -205,6 +248,29 @@ export default function FilesPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [viewer]);
 
+  useEffect(() => {
+    if (!viewer || viewer.loading || viewer.error) return;
+    if (!MD_EXTS.has(viewer.ext)) return;
+    const root = markdownRef.current;
+    if (!root) return;
+    const nodes = root.querySelectorAll<HTMLElement>('pre.mermaid:not([data-processed="true"])');
+    if (nodes.length === 0) return;
+    let cancelled = false;
+    loadMermaid()
+      .then(async (mermaid) => {
+        if (cancelled) return;
+        try {
+          await mermaid.run({ nodes: Array.from(nodes) });
+        } catch (err) {
+          console.error('mermaid render failed', err);
+        }
+      })
+      .catch((err) => console.error('mermaid load failed', err));
+    return () => {
+      cancelled = true;
+    };
+  }, [viewer]);
+
   const navigate = useCallback(
     async (path: string, addToHistory = true) => {
       setSelected(null);
@@ -215,6 +281,7 @@ export default function FilesPage() {
         setCurrentPath(r.data.path);
         setPathInput(r.data.path);
         setItems(r.data.items || []);
+        setFilter('');
         if (addToHistory) {
           setHistory((prev) => [...prev.slice(0, histIdx + 1), r.data.path]);
           setHistIdx((prev) => prev + 1);
@@ -269,7 +336,10 @@ export default function FilesPage() {
     if (action === 'open') {
       selected.is_dir
         ? navigate(selected.path)
-        : window.open(`/api/files/download?path=${encodeURIComponent(selected.path)}`, '_blank');
+        : window.open(
+            withApiKey(`/api/files/download?path=${encodeURIComponent(selected.path)}`),
+            '_blank'
+          );
     } else if (action === 'view') {
       setCtxMenu(null);
       openViewer(selected.path);
@@ -304,21 +374,24 @@ export default function FilesPage() {
       });
       toast(r.data?.message || r.error, r.error ? 'error' : 'success');
       navigate(currentPath, false);
+    } else if (action === 'copypath') {
+      copyToClipboard(selected.path)
+        .then(() => toast('Path copied'))
+        .catch(() => toast('Failed to copy', 'error'));
     } else if (action === 'delete') {
-      const c = await showModal(`Delete ${selected.name}?`, 'Type "yes" to confirm');
-      if (c !== 'yes') {
-        toast('Cancelled', 'error');
-        return;
-      }
-      const r = await api('/api/files/delete', {
-        method: 'POST',
-        headers: hdr,
-        body: JSON.stringify({ path: selected.path }),
-      });
-      toast(r.data?.message || r.error, r.error ? 'error' : 'success');
-      navigate(currentPath, false);
+      setConfirmDelete({ path: selected.path, name: selected.name });
     }
     setCtxMenu(null);
+  }
+
+  async function doDelete(path: string) {
+    const r = await api('/api/files/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }),
+    });
+    toast(r.data?.message || r.error, r.error ? 'error' : 'success');
+    navigate(currentPath, false);
   }
 
   async function handleMkdir() {
@@ -334,6 +407,21 @@ export default function FilesPage() {
   }
 
   const pathParts = currentPath.split('/').filter(Boolean);
+
+  function toggleSort(key: 'name' | 'size' | 'modified') {
+    setSort((prev) => (prev.key === key ? { key, dir: prev.dir === 1 ? -1 : 1 } : { key, dir: 1 }));
+  }
+
+  const sortArrow = (key: string) => (sort.key === key ? (sort.dir === 1 ? ' ↑' : ' ↓') : '');
+
+  const visibleItems = items
+    .filter((it) => !filter || it.name.toLowerCase().includes(filter.toLowerCase()))
+    .sort((a, b) => {
+      if (a.is_dir !== b.is_dir) return a.is_dir ? -1 : 1; // directories always first
+      if (sort.key === 'name')
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }) * sort.dir;
+      return (a[sort.key] - b[sort.key]) * sort.dir;
+    });
 
   return (
     <>
@@ -355,9 +443,6 @@ export default function FilesPage() {
           </button>
           <button className="btn btn-ghost btn-sm" onClick={() => navigate('~')}>
             <Home size={16} />
-          </button>
-          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')}>
-            <Slash size={16} />
           </button>
           <button className="btn btn-secondary btn-sm" onClick={handleMkdir}>
             <FolderPlus size={14} /> New
@@ -384,6 +469,29 @@ export default function FilesPage() {
           >
             Go
           </button>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <Search
+              size={13}
+              style={{
+                position: 'absolute',
+                left: 10,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--text-secondary)',
+                pointerEvents: 'none',
+              }}
+            />
+            <input
+              type="text"
+              className="input"
+              style={{ width: 160, paddingLeft: 30 }}
+              placeholder="Filter…"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              onKeyDown={(e) => e.key === 'Escape' && setFilter('')}
+              aria-label="Filter files"
+            />
+          </div>
         </div>
 
         <div className={styles.breadcrumb}>
@@ -410,9 +518,30 @@ export default function FilesPage() {
           <div className="card-body" style={{ padding: 0 }}>
             <div className={`${styles.row} ${styles.rowHeader}`}>
               <span className={styles.icon}></span>
-              <span className={styles.name}>Name</span>
-              <span className={styles.size}>Size</span>
-              <span className={styles.modified}>Modified</span>
+              <span
+                className={styles.name}
+                style={{ cursor: 'pointer' }}
+                onClick={() => toggleSort('name')}
+                role="button"
+              >
+                Name{sortArrow('name')}
+              </span>
+              <span
+                className={styles.size}
+                style={{ cursor: 'pointer' }}
+                onClick={() => toggleSort('size')}
+                role="button"
+              >
+                Size{sortArrow('size')}
+              </span>
+              <span
+                className={styles.modified}
+                style={{ cursor: 'pointer' }}
+                onClick={() => toggleSort('modified')}
+                role="button"
+              >
+                Modified{sortArrow('modified')}
+              </span>
               <span className={styles.perms}>Perms</span>
             </div>
 
@@ -422,9 +551,12 @@ export default function FilesPage() {
               </div>
             )}
             {!loading && items.length === 0 && <div className="empty-state">Empty directory</div>}
+            {!loading && items.length > 0 && visibleItems.length === 0 && (
+              <div className="empty-state">No matches for “{filter}”</div>
+            )}
 
             {!loading &&
-              items.map((item) => {
+              visibleItems.map((item) => {
                 const absPath = currentPath + (currentPath.endsWith('/') ? '' : '/') + item.name;
                 return (
                   <FileRow
@@ -456,7 +588,7 @@ export default function FilesPage() {
             className={styles.ctxMenu}
             style={{
               left: Math.min(ctxMenu.x, window.innerWidth - 180),
-              top: Math.min(ctxMenu.y, window.innerHeight - 230),
+              top: Math.min(ctxMenu.y, window.innerHeight - 265),
             }}
           >
             {[
@@ -468,6 +600,7 @@ export default function FilesPage() {
               ...(isViewable(ctxMenu.item.name, ctxMenu.item.is_dir)
                 ? [{ label: 'View', action: 'view', Icon: Eye }]
                 : []),
+              { label: 'Copy Path', action: 'copypath', Icon: ClipboardCopy },
               { label: 'Rename', action: 'rename', Icon: Pencil },
               { label: 'Copy', action: 'copy', Icon: Copy },
               { label: 'Move', action: 'move', Icon: Scissors },
@@ -511,8 +644,11 @@ export default function FilesPage() {
               )}
               {!viewer.loading && !viewer.error && MD_EXTS.has(viewer.ext) && (
                 <div
+                  ref={markdownRef}
                   className={styles.markdown}
-                  dangerouslySetInnerHTML={{ __html: marked.parse(viewer.content) as string }}
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(marked.parse(viewer.content) as string),
+                  }}
                 />
               )}
               {!viewer.loading && !viewer.error && !MD_EXTS.has(viewer.ext) && (
@@ -522,6 +658,23 @@ export default function FilesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        title="Delete"
+        message={
+          <>
+            Delete <strong>{confirmDelete?.name}</strong>? This cannot be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        danger
+        onConfirm={() => {
+          if (confirmDelete) doDelete(confirmDelete.path);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
 
       {modal && (
         <div className={styles.modalOverlay}>

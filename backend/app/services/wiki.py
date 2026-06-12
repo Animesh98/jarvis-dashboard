@@ -7,6 +7,7 @@ import httpx
 
 _wiki_kb: dict = {"categories": {}, "top100": [], "ts": 0}
 _wiki_kb_lock = threading.Lock()
+_wiki_kb_refreshing = False
 _WIKI_KB_TTL = 86400
 
 _http = httpx.Client(
@@ -124,22 +125,40 @@ def _parse_top100_movies(content_md: str) -> list:
 
 
 def _get_top100_page_names() -> list:
+    # Walk back calendar months properly — subtracting 30-day blocks can
+    # duplicate a month (May 31 − 30d = May 1) and skip the one before it
     now = datetime.datetime.now()
+    year, month = now.year, now.month
     months = []
-    for offset in range(3):
-        dt = now - datetime.timedelta(days=30 * offset)
-        month_name = dt.strftime("%B").lower()
-        year = dt.year
+    for _ in range(3):
+        month_name = datetime.date(year, month, 1).strftime("%B").lower()
         months.append(f"meta/top100/{month_name}{year}")
+        month -= 1
+        if month == 0:
+            month, year = 12, year - 1
     return months
 
 
 def _load_knowledge_base():
+    global _wiki_kb_refreshing
     now = time.time()
     with _wiki_kb_lock:
         if _wiki_kb["ts"] and (now - _wiki_kb["ts"]) < _WIKI_KB_TTL and _wiki_kb["categories"]:
             return
+        if _wiki_kb_refreshing:
+            # Another thread is already re-fetching the wiki — serve the
+            # current (possibly stale) copy instead of fetching in parallel
+            return
+        _wiki_kb_refreshing = True
 
+    try:
+        _refresh_knowledge_base()
+    finally:
+        with _wiki_kb_lock:
+            _wiki_kb_refreshing = False
+
+
+def _refresh_knowledge_base():
     categories = {}
     top100 = []
 

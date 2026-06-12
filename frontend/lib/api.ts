@@ -1,5 +1,31 @@
 const API_BASE = '';
 
+const KEY_STORAGE = 'jarvis-api-key';
+
+export function getApiKey(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    return localStorage.getItem(KEY_STORAGE) || '';
+  } catch {
+    return '';
+  }
+}
+
+export function setApiKey(key: string) {
+  try {
+    localStorage.setItem(KEY_STORAGE, key);
+  } catch {
+    // localStorage unavailable (private mode) — key just won't persist
+  }
+}
+
+/** Append the API key to a URL used outside fetch (window.open downloads). */
+export function withApiKey(url: string): string {
+  const key = getApiKey();
+  if (!key) return url;
+  return url + (url.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(key);
+}
+
 export async function api<T = any>(
   path: string,
   options: RequestInit = {}
@@ -7,13 +33,20 @@ export async function api<T = any>(
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
+    const key = getApiKey();
     const res = await fetch(`${API_BASE}${path}`, {
       ...options,
+      headers: { ...(key ? { 'X-API-Key': key } : {}), ...(options.headers || {}) },
       signal: controller.signal,
     });
     clearTimeout(timeout);
+    if (res.status === 401) {
+      window.dispatchEvent(new CustomEvent('jarvis:unauthorized'));
+      return { data: null, error: 'Unauthorized — API key required' };
+    }
     const data = await res.json();
     if (data && data.error) return { data: null, error: data.error };
+    if (!res.ok) return { data: null, error: `HTTP ${res.status}` };
     return { data, error: null };
   } catch (e: any) {
     return { data: null, error: e.message || 'Failed' };

@@ -43,6 +43,8 @@ def request(path: str, method: str = "GET", body: str | None = None, retry: bool
         if resp.status_code == 403 and retry:
             _login()
             return request(path, method, body, retry=False)
+        if resp.status_code >= 400:
+            return {"error": f"qBittorrent HTTP {resp.status_code}"}
         raw = resp.text.strip()
         if raw:
             try:
@@ -79,11 +81,11 @@ def _clean_query_variants(query: str) -> list[str]:
 def _search_apibay(query: str) -> list:
     """Search apibay for a single query. Returns list of result dicts."""
     try:
-        client = httpx.Client(timeout=15)
-        resp = client.get(
-            f"https://apibay.org/q.php?q={urllib.parse.quote(query)}",
-            headers={"User-Agent": "Mozilla/5.0"},
-        )
+        with httpx.Client(timeout=15) as client:
+            resp = client.get(
+                f"https://apibay.org/q.php?q={urllib.parse.quote(query)}",
+                headers={"User-Agent": "Mozilla/5.0"},
+            )
         results = resp.json()
         if not isinstance(results, list):
             return []
@@ -154,8 +156,10 @@ def add_torrent(magnet: str, category: str = "") -> dict:
 def clean_completed() -> dict:
     try:
         torrents = request("/torrents/info")
-        if isinstance(torrents, dict) and torrents.get("error"):
-            return torrents
+        if not isinstance(torrents, list):
+            if isinstance(torrents, dict) and torrents.get("error"):
+                return torrents
+            return {"error": "Unexpected qBittorrent response"}
         cleaned = []
         for t in torrents:
             if t.get("progress", 0) >= 1.0 and t.get("state", "") in (
@@ -184,8 +188,10 @@ def clean_completed() -> dict:
 def get_torrents() -> list:
     """Get all torrents in normalized format."""
     torrents = request("/torrents/info")
-    if isinstance(torrents, dict) and torrents.get("error"):
-        return torrents
+    if not isinstance(torrents, list):
+        if isinstance(torrents, dict) and torrents.get("error"):
+            return torrents
+        return {"error": "Unexpected qBittorrent response"}
     return [_normalize_torrent(t) for t in torrents]
 
 

@@ -1,3 +1,4 @@
+import functools
 import os
 import shutil
 import stat as stat_module
@@ -5,8 +6,19 @@ import stat as stat_module
 from app.config import settings
 
 
+class PathDeniedError(Exception):
+    """Raised when a requested path escapes the allowed roots."""
+
+
 def _get_home() -> str:
     return settings.file_home or os.path.expanduser("~")
+
+
+def _allowed_roots() -> list[str]:
+    roots = [os.path.realpath(_get_home())]
+    if settings.media_path and os.path.isdir(settings.media_path):
+        roots.append(os.path.realpath(settings.media_path))
+    return roots
 
 
 def _resolve_path(requested: str) -> str:
@@ -18,9 +30,28 @@ def _resolve_path(requested: str) -> str:
         requested = os.path.join(home, requested[1:].lstrip("/"))
     if not os.path.isabs(requested):
         requested = os.path.join(home, requested)
-    return os.path.realpath(requested)
+    full = os.path.realpath(requested)
+    # Jail: realpath (symlinks/.. resolved) must live under an allowed root
+    for root in _allowed_roots():
+        if full == root or full.startswith(root + os.sep):
+            return full
+    raise PathDeniedError("Access denied: path outside allowed directories")
 
 
+def _deny_to_error(fn):
+    """Convert PathDeniedError into the {"error": ...} shape the routers return."""
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except PathDeniedError as e:
+            return {"error": str(e)}
+
+    return wrapper
+
+
+@_deny_to_error
 def list_dir(rel_path: str) -> dict:
     full = _resolve_path(rel_path)
     if not os.path.exists(full):
@@ -49,6 +80,7 @@ def list_dir(rel_path: str) -> dict:
     return {"path": full, "items": items, "home": _get_home()}
 
 
+@_deny_to_error
 def delete(rel_path: str) -> dict:
     full = _resolve_path(rel_path)
     if not os.path.exists(full):
@@ -63,6 +95,7 @@ def delete(rel_path: str) -> dict:
         return {"error": str(e)}
 
 
+@_deny_to_error
 def move(src_rel: str, dst_rel: str) -> dict:
     src = _resolve_path(src_rel)
     dst = _resolve_path(dst_rel)
@@ -75,6 +108,7 @@ def move(src_rel: str, dst_rel: str) -> dict:
         return {"error": str(e)}
 
 
+@_deny_to_error
 def copy(src_rel: str, dst_rel: str) -> dict:
     src = _resolve_path(src_rel)
     dst = _resolve_path(dst_rel)
@@ -90,6 +124,7 @@ def copy(src_rel: str, dst_rel: str) -> dict:
         return {"error": str(e)}
 
 
+@_deny_to_error
 def mkdir(rel_path: str) -> dict:
     full = _resolve_path(rel_path)
     try:
@@ -99,11 +134,12 @@ def mkdir(rel_path: str) -> dict:
         return {"error": str(e)}
 
 
+@_deny_to_error
 def rename(rel_path: str, new_name: str) -> dict:
     full = _resolve_path(rel_path)
     if not os.path.exists(full):
         return {"error": "Not found"}
-    if "/" in new_name or "\\" in new_name:
+    if "/" in new_name or "\\" in new_name or new_name in (".", ".."):
         return {"error": "Invalid name"}
     new_full = os.path.join(os.path.dirname(full), new_name)
     try:
@@ -114,7 +150,10 @@ def rename(rel_path: str, new_name: str) -> dict:
 
 
 def download_path(rel_path: str) -> str | None:
-    full = _resolve_path(rel_path)
+    try:
+        full = _resolve_path(rel_path)
+    except PathDeniedError:
+        return None
     if not os.path.isfile(full):
         return None
     return full
@@ -123,6 +162,7 @@ def download_path(rel_path: str) -> str | None:
 MAX_VIEW_BYTES = 2 * 1024 * 1024  # 2 MB
 
 
+@_deny_to_error
 def read_text(rel_path: str) -> dict:
     full = _resolve_path(rel_path)
     if not os.path.isfile(full):

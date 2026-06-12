@@ -8,7 +8,19 @@ from fastapi.responses import PlainTextResponse, Response
 
 from app.config import settings
 from app.middleware import APIKeyMiddleware
-from app.routers import actions, docker, files, media, notes, recommendations, streaming, system, tasks, torrents, watchlist
+from app.routers import (
+    actions,
+    docker,
+    files,
+    media,
+    notes,
+    recommendations,
+    streaming,
+    system,
+    tasks,
+    torrents,
+    watchlist,
+)
 from app.services import database as db_svc
 from app.services import qbittorrent as qbit_svc
 from app.services import system as system_svc

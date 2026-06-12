@@ -11,6 +11,7 @@ from app.config import settings
 
 # Storage cache
 _storage_cache: dict = {"data": None, "ts": 0}
+_storage_lock = threading.Lock()
 _STORAGE_TTL = 300
 
 # Weather cache
@@ -120,6 +121,18 @@ def get_storage() -> dict:
     now = time.time()
     if _storage_cache["data"] and (now - _storage_cache["ts"]) < _STORAGE_TTL:
         return _storage_cache["data"]
+    # Serialize refreshes — concurrent expiry would otherwise spawn parallel
+    # `du` scans over the whole media tree. Late arrivals serve the stale copy.
+    if not _storage_lock.acquire(blocking=False):
+        return _storage_cache["data"] or {"dirs": []}
+    try:
+        return _scan_storage()
+    finally:
+        _storage_lock.release()
+
+
+def _scan_storage() -> dict:
+    now = time.time()
     result = {"dirs": []}
     try:
         usage = shutil.disk_usage("/")

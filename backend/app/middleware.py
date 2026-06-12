@@ -1,15 +1,25 @@
 """
-Auth middleware — protects direct backend access.
+Auth middleware — protects the API with a shared key.
 
 How it works:
-  1. Requests from localhost (127.0.0.1, ::1) are TRUSTED — these come
-     from the Next.js proxy on the same machine. No key needed.
-  2. Requests from any other IP must include a valid X-API-Key header.
-  3. If no API_KEY is set in .env, auth is disabled (open access, like before).
+  1. If no API_KEY is set in .env, auth is disabled (open access, like before).
+  2. Every request must carry the key in an X-API-Key header. The browser
+     stores it in localStorage and lib/api.ts attaches it to each fetch.
+     Requests that can't send headers (window.open downloads) may pass it
+     as a ?key= query parameter on GET requests instead.
+  3. A small allowlist stays public: docs pages, the feature-flag config the
+     frontend needs before it knows the key, and the read-only image proxies
+     (loaded via <img> tags, which can't send headers).
+
+Localhost is deliberately NOT trusted: the Next.js proxy forwards every
+browser request from 127.0.0.1, so trusting localhost would mean anyone who
+can reach port 3000 gets full unauthenticated access.
 
 This is a FastAPI middleware (ASGI), meaning it runs BEFORE any router.
 Every single request passes through here first.
 """
+
+import secrets
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -17,13 +27,25 @@ from starlette.responses import JSONResponse
 
 from app.config import settings
 
-# IPs that are considered "local" — the Next.js proxy runs on the same machine
-_TRUSTED_HOSTS = {"127.0.0.1", "::1", "localhost"}
+# Exact paths that never require the key
+_PUBLIC_PATHS = {
+    "/docs",
+    "/openapi.json",
+    "/redoc",
+    "/api/config/features",
+}
+
+# Prefixes that never require the key — read-only image proxies consumed
+# by <img src=...>, which cannot attach headers
+_PUBLIC_PREFIXES = (
+    "/api/tmdb-image/",
+    "/api/jellyfin-media/poster",
+)
 
 
 class APIKeyMiddleware(BaseHTTPMiddleware):
     """
-    ASGI middleware that checks X-API-Key header for non-local requests.
+    ASGI middleware that checks X-API-Key on every request.
 
     Why middleware instead of a FastAPI dependency?
     - Middleware runs on EVERY request automatically — no risk of forgetting
@@ -37,18 +59,16 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         if not settings.api_key:
             return await call_next(request)
 
-        # Allow docs/openapi pages through (useful for debugging)
-        if request.url.path in ("/docs", "/openapi.json", "/redoc"):
+        path = request.url.path
+        if path in _PUBLIC_PATHS or path.startswith(_PUBLIC_PREFIXES):
             return await call_next(request)
 
-        # Trust requests from localhost (Next.js proxy)
-        client_ip = request.client.host if request.client else None
-        if client_ip in _TRUSTED_HOSTS:
-            return await call_next(request)
-
-        # Non-local request — require API key
         provided_key = request.headers.get("x-api-key", "")
-        if provided_key != settings.api_key:
+        if not provided_key and request.method == "GET":
+            # window.open / <a download> can't send headers
+            provided_key = request.query_params.get("key", "")
+
+        if not secrets.compare_digest(provided_key, settings.api_key):
             return JSONResponse(
                 status_code=401,
                 content={"error": "Invalid or missing API key"},

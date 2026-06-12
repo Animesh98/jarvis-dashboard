@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import '@/styles/globals.scss';
 import TopNav from '@/components/Sidebar';
 import MobileNav from '@/components/MobileNav';
+import ApiKeyGate from '@/components/ApiKeyGate';
 import { DataProvider } from '@/lib/DataContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
 
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <MobileNav />
             </div>
             <div id="toast-container" className="toast-container" />
+            <ApiKeyGate />
           </DataProvider>
         </ThemeProvider>
       </body>

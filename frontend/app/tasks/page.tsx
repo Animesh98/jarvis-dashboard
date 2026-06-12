@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from '@/lib/toast';
+import { copyToClipboard } from '@/lib/clipboard';
+import ConfirmModal from '@/components/ConfirmModal';
 import TaskSmartActions from './TaskSmartActions';
 import PortalDropdown from './PortalDropdown';
 import styles from './page.module.scss';
@@ -81,22 +83,6 @@ function plainTitle(title: string): string {
 }
 
 /** Copy text to clipboard — works on non-HTTPS (LAN IP) too */
-function copyToClipboard(text: string): Promise<void> {
-  if (navigator.clipboard && window.isSecureContext) {
-    return navigator.clipboard.writeText(text);
-  }
-  // Fallback for HTTP / LAN access
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.left = '-9999px';
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand('copy');
-  document.body.removeChild(ta);
-  return Promise.resolve();
-}
-
 function CalendarPicker({
   value,
   onChange,
@@ -410,6 +396,7 @@ function TaskCard({
   onDelete,
   onEdit,
   onCopy,
+  onMove,
   onDragStart,
   onDragEnd,
   editingId,
@@ -417,9 +404,10 @@ function TaskCard({
   onEditCancel,
 }: {
   task: Task;
-  onDelete: (id: string) => void;
+  onDelete: (task: Task) => void;
   onEdit: (id: string) => void;
   onCopy: (task: Task) => void;
+  onMove: (task: Task, targetCol: string) => void;
   onDragStart: (e: React.DragEvent, task: Task) => void;
   onDragEnd: () => void;
   editingId: string | null;
@@ -427,6 +415,9 @@ function TaskCard({
   onEditCancel: () => void;
 }) {
   const isEditing = editingId === task.id;
+  const colIdx = COLUMNS.findIndex((c) => c.id === task.column);
+  const prevCol = colIdx > 0 ? COLUMNS[colIdx - 1] : null;
+  const nextCol = colIdx >= 0 && colIdx < COLUMNS.length - 1 ? COLUMNS[colIdx + 1] : null;
 
   return (
     <div
@@ -459,6 +450,32 @@ function TaskCard({
                   })}
                 </span>
                 <div className={styles.taskActions}>
+                  {prevCol && (
+                    <button
+                      className={styles.taskActionBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMove(task, prevCol.id);
+                      }}
+                      title={`Move to ${prevCol.label}`}
+                      aria-label={`Move to ${prevCol.label}`}
+                    >
+                      <ChevronLeft size={13} />
+                    </button>
+                  )}
+                  {nextCol && (
+                    <button
+                      className={styles.taskActionBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMove(task, nextCol.id);
+                      }}
+                      title={`Move to ${nextCol.label}`}
+                      aria-label={`Move to ${nextCol.label}`}
+                    >
+                      <ChevronRight size={13} />
+                    </button>
+                  )}
                   <button
                     className={styles.taskActionBtn}
                     onClick={(e) => {
@@ -466,6 +483,7 @@ function TaskCard({
                       onCopy(task);
                     }}
                     title="Copy"
+                    aria-label="Copy task"
                   >
                     <Copy size={13} />
                   </button>
@@ -476,6 +494,7 @@ function TaskCard({
                       onEdit(task.id);
                     }}
                     title="Edit"
+                    aria-label="Edit task"
                   >
                     <Pencil size={13} />
                   </button>
@@ -483,9 +502,10 @@ function TaskCard({
                     className={`${styles.taskActionBtn} ${styles.taskActionDelete}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDelete(task.id);
+                      onDelete(task);
                     }}
                     title="Delete"
+                    aria-label="Delete task"
                   >
                     <Trash2 size={13} />
                   </button>
@@ -650,6 +670,7 @@ export default function TasksPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [migratedCount, setMigratedCount] = useState(0);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [confirmDeleteTask, setConfirmDeleteTask] = useState<Task | null>(null);
 
   // Native DnD state
   const [dragTaskId, setDragTaskId] = useState<string | null>(null);
@@ -667,11 +688,16 @@ export default function TasksPage() {
     });
   }, []);
 
-  // Fetch tasks for selected date
+  // Fetch tasks for selected date — cancelled flag keeps a slow response for
+  // a previous date from painting over the currently selected one
   useEffect(() => {
+    let cancelled = false;
     api<Task[]>(`/api/tasks?date=${selectedDate}`).then((r) => {
-      if (Array.isArray(r.data)) setTasks(r.data);
+      if (!cancelled && Array.isArray(r.data)) setTasks(r.data);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedDate, migratedCount]);
 
   const tasksInColumn = useCallback(
@@ -687,22 +713,59 @@ export default function TasksPage() {
       body: JSON.stringify({ title, column, entities, date: selectedDate }),
     });
     if (r.data) setTasks((prev) => [...prev, r.data!]);
+    else toast(`Failed to add "${plainTitle(title)}": ${r.error || 'unknown error'}`, 'error');
   };
 
   const handleDelete = async (id: string) => {
+    const prevTasks = tasks;
     setTasks((prev) => prev.filter((t) => t.id !== id));
-    await api(`/api/tasks/${id}`, { method: 'DELETE' });
+    const r = await api(`/api/tasks/${id}`, { method: 'DELETE' });
+    if (r.error) {
+      setTasks(prevTasks);
+      toast(`Delete failed: ${r.error}`, 'error');
+    }
   };
 
   const handleEditSave = async (id: string, title: string, entities: Entity[]) => {
     setEditingId(null);
+    const prevTasks = tasks;
     // Optimistic update
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, title, entities } : t)));
-    await api(`/api/tasks/${id}`, {
+    const r = await api(`/api/tasks/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, entities }),
     });
+    if (r.error) {
+      setTasks(prevTasks);
+      toast(`Edit failed: ${r.error}`, 'error');
+    }
+  };
+
+  const handleMove = async (task: Task, targetCol: string) => {
+    if (targetCol === task.column) return;
+    const colTasks = tasks
+      .filter((t) => t.column === targetCol && t.id !== task.id)
+      .sort((a, b) => a.order - b.order);
+    const updates = [...colTasks, task].map((t, i) => ({ id: t.id, column: targetCol, order: i }));
+    setTasks((prev) => {
+      const others = prev.filter((t) => t.column !== targetCol && t.id !== task.id);
+      return [
+        ...others,
+        ...colTasks.map((t, i) => ({ ...t, order: i })),
+        { ...task, column: targetCol, order: colTasks.length },
+      ];
+    });
+    const r = await api<{ ok: boolean }>('/api/tasks/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    if (!r.data?.ok) {
+      if (r.error) toast(`Move failed: ${r.error}`, 'error');
+      const fresh = await api<Task[]>(`/api/tasks?date=${selectedDate}`);
+      if (Array.isArray(fresh.data)) setTasks(fresh.data);
+    }
   };
 
   const handleCopyTask = (task: Task) => {
@@ -924,9 +987,10 @@ export default function TasksPage() {
                     <div key={task.id} data-task-id={task.id}>
                       <TaskCard
                         task={task}
-                        onDelete={handleDelete}
+                        onDelete={setConfirmDeleteTask}
                         onEdit={setEditingId}
                         onCopy={handleCopyTask}
+                        onMove={handleMove}
                         onDragStart={handleDragStart}
                         onDragEnd={handleDragEnd}
                         editingId={editingId}
@@ -950,6 +1014,23 @@ export default function TasksPage() {
           })}
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!confirmDeleteTask}
+        title="Delete Task"
+        message={
+          <>
+            Delete <strong>{confirmDeleteTask ? plainTitle(confirmDeleteTask.title) : ''}</strong>?
+          </>
+        }
+        confirmLabel="Delete"
+        danger
+        onConfirm={() => {
+          if (confirmDeleteTask) handleDelete(confirmDeleteTask.id);
+          setConfirmDeleteTask(null);
+        }}
+        onCancel={() => setConfirmDeleteTask(null)}
+      />
     </>
   );
 }

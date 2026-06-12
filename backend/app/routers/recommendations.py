@@ -4,19 +4,19 @@ import re
 import urllib.parse
 
 import httpx
-from cachetools import TTLCache
 from fastapi import APIRouter
 
 from app.services import jellyfin as jellyfin_svc
 from app.services import ratings as ratings_svc
 from app.services import tmdb as tmdb_svc
 from app.services import wiki as wiki_svc
+from app.services.cache import LockedTTLCache
 
 router = APIRouter(prefix="/api/recommendations", tags=["recommendations"])
 
-_cache: TTLCache = TTLCache(maxsize=200, ttl=86400)
-_search_cache: TTLCache = TTLCache(maxsize=200, ttl=3600)
-_detail_cache: TTLCache = TTLCache(maxsize=300, ttl=86400)
+_cache = LockedTTLCache(maxsize=200, ttl=86400)
+_search_cache = LockedTTLCache(maxsize=200, ttl=3600)
+_detail_cache = LockedTTLCache(maxsize=300, ttl=86400)
 
 MOOD_CATEGORY_MAP = {
     "feel-good": ["Comedy", "Romance", "Animation", "Adventure", "Family", "Musical"],
@@ -213,7 +213,8 @@ def get_mood(mood: str = "", media_type: str = "movie"):
         for r in results:
             r["torrent_query"] = f"{r['title']} S01 complete"
         result = {"mood": mood, "media_type": media_type, "results": results}
-        _cache[cache_key] = result
+        if results:  # don't cache an empty/failed lookup for 24h
+            _cache[cache_key] = result
         return result
 
     # Movie path: wiki KB + TMDB discover fallback
@@ -264,7 +265,8 @@ def get_mood(mood: str = "", media_type: str = "movie"):
     results.sort(key=lambda x: float(x.get("rating") or 0), reverse=True)
 
     result = {"mood": mood, "media_type": media_type, "matched_categories": matched_cats, "results": results}
-    _cache[cache_key] = result
+    if results:  # don't cache an empty/failed lookup for 24h
+        _cache[cache_key] = result
     return result
 
 
@@ -313,7 +315,8 @@ def get_similar(title: str = ""):
             r["torrent_query"] = f"{r['title']} S01 complete"
 
     result = {"query": title, "matched_categories": found_categories, "results": results}
-    _cache[cache_key] = result
+    if results:  # don't cache an empty/failed lookup for 24h
+        _cache[cache_key] = result
     return result
 
 
@@ -512,7 +515,8 @@ def get_library():
         "library_items": library_items,
         "suggestions": suggestions,
     }
-    _cache[cache_key] = result
+    if library_items or suggestions:  # don't cache a failed Jellyfin read for 24h
+        _cache[cache_key] = result
     return result
 
 
@@ -532,7 +536,8 @@ def get_trending(time_window: str = "week"):
             r["torrent_query"] = f"{r['title']} S01 complete"
 
     result = {"results": results, "time_window": time_window}
-    _cache[cache_key] = result
+    if results:  # don't cache an empty/failed lookup for 24h
+        _cache[cache_key] = result
     return result
 
 
@@ -663,7 +668,8 @@ def get_detail(tmdb_id: str = "", type: str = "movie"):
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
             result["similar_kb"] = list(pool.map(_fetch_kb_poster, similar_kb_raw))
 
-    _detail_cache[cache_key] = result
+    if "error" not in result:  # a transient TMDB failure must not poison 24h of cache
+        _detail_cache[cache_key] = result
     return result
 
 
