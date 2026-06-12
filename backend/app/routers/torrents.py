@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.config import settings
@@ -65,16 +65,3 @@ def resume_torrent(body: TorrentActionRequest):
 @router.post("/torrents/delete")
 def delete_torrent(body: TorrentDeleteRequest):
     return _svc().delete_torrent(body.hashes, body.delete_files)
-
-
-@router.api_route("/qbit/{path:path}", methods=["GET", "POST"])
-async def qbit_proxy(path: str, request: Request):
-    """Legacy qBittorrent proxy — kept for backward compatibility."""
-    qbit_path = f"/{path}"
-    query = str(request.query_params)
-    if query:
-        qbit_path += f"?{query}"
-    if request.method == "POST":
-        body = (await request.body()).decode()
-        return qbit_svc.request(qbit_path, method="POST", body=body)
-    return qbit_svc.request(qbit_path)

@@ -1,4 +1,5 @@
 import concurrent.futures
+import threading
 import urllib.parse
 
 import httpx
@@ -6,8 +7,11 @@ from cachetools import TTLCache
 
 from app.config import settings
 
-# LRU cache for raw TMDB fetch responses — deduplicates across endpoints
+# LRU cache for raw TMDB fetch responses — deduplicates across endpoints.
+# TTLCache is not thread-safe and fetch() runs from ThreadPoolExecutor
+# workers, so all access goes through _fetch_lock.
 _fetch_cache: TTLCache = TTLCache(maxsize=500, ttl=3600)
+_fetch_lock = threading.Lock()
 
 _client = httpx.Client(
     timeout=10,
@@ -19,15 +23,22 @@ _client = httpx.Client(
 
 
 def fetch(endpoint: str) -> dict:
-    cached = _fetch_cache.get(endpoint)
+    with _fetch_lock:
+        cached = _fetch_cache.get(endpoint)
     if cached is not None:
         return cached
     sep = "&" if "?" in endpoint else "?"
     url = f"{settings.tmdb_base}{endpoint}{sep}api_key={settings.tmdb_api_key}"
     try:
         resp = _client.get(url)
+        # Don't cache failures — a 429/5xx body would otherwise be served
+        # as data for the next hour
+        if resp.status_code != 200:
+            print(f"[TMDB] HTTP {resp.status_code} for {endpoint}")
+            return {}
         data = resp.json()
-        _fetch_cache[endpoint] = data
+        with _fetch_lock:
+            _fetch_cache[endpoint] = data
         return data
     except Exception as e:
         print(f"[TMDB] Error fetching {endpoint}: {e}")
