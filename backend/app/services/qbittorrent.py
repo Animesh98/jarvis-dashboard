@@ -173,7 +173,8 @@ def clean_completed() -> dict:
             ):
                 h = t.get("hash", "")
                 if h:
-                    request(f"/torrents/delete?hashes={h}&deleteFiles=false", method="POST")
+                    del_body = urllib.parse.urlencode({"hashes": h, "deleteFiles": "false"})
+                    request("/torrents/delete", method="POST", body=del_body)
                     cleaned.append(t.get("name", h))
         if cleaned:
             return {
@@ -207,18 +208,18 @@ def get_transfer_info() -> dict:
 
 
 def pause_torrent(hashes: list[str]) -> dict:
-    return request(f"/torrents/stop?hashes={'|'.join(hashes)}", method="POST")
+    body = urllib.parse.urlencode({"hashes": "|".join(hashes)})
+    return request("/torrents/stop", method="POST", body=body)
 
 
 def resume_torrent(hashes: list[str]) -> dict:
-    return request(f"/torrents/start?hashes={'|'.join(hashes)}", method="POST")
+    body = urllib.parse.urlencode({"hashes": "|".join(hashes)})
+    return request("/torrents/start", method="POST", body=body)
 
 
 def delete_torrent(hashes: list[str], delete_files: bool = False) -> dict:
-    return request(
-        f"/torrents/delete?hashes={'|'.join(hashes)}&deleteFiles={'true' if delete_files else 'false'}",
-        method="POST",
-    )
+    body = urllib.parse.urlencode({"hashes": "|".join(hashes), "deleteFiles": "true" if delete_files else "false"})
+    return request("/torrents/delete", method="POST", body=body)
 
 
 def _normalize_torrent(t: dict) -> dict:
