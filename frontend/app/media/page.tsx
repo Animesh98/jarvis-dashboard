@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { api, timeAgo } from '@/lib/api';
+import { api, timeAgo, fmtBytes } from '@/lib/api';
+import { toast } from '@/lib/toast';
 import {
   Film,
   Tv,
@@ -19,6 +20,8 @@ import {
   ChevronLeft,
   Library,
   BarChart3,
+  Trash2,
+  X,
 } from 'lucide-react';
 import styles from './page.module.scss';
 
@@ -186,16 +189,32 @@ function PosterCard({
   item,
   showProgress,
   subtitle,
+  onDelete,
 }: {
   item: LibItem;
   showProgress?: boolean;
   subtitle?: string;
+  onDelete?: (item: LibItem) => void;
 }) {
   const isMovie = item.type === 'Movie';
   const detailHref = item.tmdb_id ? `/discover/${isMovie ? 'movie' : 'tv'}/${item.tmdb_id}` : '#';
 
   return (
     <div className={styles.posterCard}>
+      {onDelete && (
+        <button
+          className={styles.deleteBtn}
+          title={`Delete ${item.name}`}
+          aria-label={`Delete ${item.name}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete(item);
+          }}
+        >
+          <Trash2 size={13} />
+        </button>
+      )}
       <Link href={detailHref} className={styles.posterWrap}>
         {item.poster ? (
           <img src={item.poster} alt={item.name} className={styles.posterImg} loading="lazy" />
@@ -236,6 +255,8 @@ export default function MediaPage() {
   const [libraryFilter, setLibraryFilter] = useState<'all' | 'movie' | 'series' | 'unwatched'>(
     'all'
   );
+  const [deleteTarget, setDeleteTarget] = useState<LibItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -245,6 +266,43 @@ export default function MediaPage() {
     }
     load();
   }, []);
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const r = await api<{ ok: boolean; freed_bytes?: number }>(
+      `/api/jellyfin-media/item/${deleteTarget.id}`,
+      { method: 'DELETE' }
+    );
+    setDeleting(false);
+    if (r.error) {
+      toast(r.error, 'error');
+      return;
+    }
+    const isSeries = deleteTarget.type === 'Series';
+    const freed = r.data?.freed_bytes ? ` · freed ${fmtBytes(r.data.freed_bytes)}` : '';
+    // Drop it from every list it could appear in, and fix the counts.
+    setData((prev) => {
+      if (!prev) return prev;
+      const gone = (i: LibItem) => i.id !== deleteTarget.id;
+      return {
+        ...prev,
+        library: prev.library.filter(gone),
+        unwatched: prev.unwatched.filter(gone),
+        continue_watching: prev.continue_watching.filter(gone),
+        watch_history: prev.watch_history.filter(gone),
+        counts: prev.counts
+          ? {
+              ...prev.counts,
+              MovieCount: prev.counts.MovieCount - (isSeries ? 0 : 1),
+              SeriesCount: prev.counts.SeriesCount - (isSeries ? 1 : 0),
+            }
+          : prev.counts,
+      };
+    });
+    toast(`Deleted ${deleteTarget.name}${freed}`, 'success');
+    setDeleteTarget(null);
+  }
 
   if (loading) {
     return (
@@ -496,7 +554,7 @@ export default function MediaPage() {
           </div>
           <div className={styles.libraryGrid}>
             {filteredLibrary.map((item, i) => (
-              <PosterCard key={i} item={item} />
+              <PosterCard key={i} item={item} onDelete={setDeleteTarget} />
             ))}
           </div>
           {filteredLibrary.length === 0 && (
@@ -529,6 +587,53 @@ export default function MediaPage() {
           </div>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className={styles.modalOverlay} onClick={() => !deleting && setDeleteTarget(null)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Delete {deleteTarget.type === 'Series' ? 'Series' : 'Movie'}</h3>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p className={styles.modalText}>
+                Permanently delete <strong>{deleteTarget.name}</strong>
+                {deleteTarget.type === 'Series' ? ' and all its episodes' : ''} from disk?
+              </p>
+              <p className={styles.deleteWarning}>
+                This removes the media files from the server. It cannot be undone.
+              </p>
+            </div>
+            <div className={styles.modalFooter}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-danger" onClick={confirmDelete} disabled={deleting}>
+                {deleting ? (
+                  <>
+                    <Loader2 size={14} className={styles.spinner} /> Deleting…
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} /> Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
