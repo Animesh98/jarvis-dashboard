@@ -221,6 +221,7 @@
 
 // Poster card (shared by all sections)
 .posterCard {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -232,6 +233,40 @@
   @include mobile {
     min-width: 105px;
     max-width: 105px;
+  }
+
+  &:hover .deleteBtn {
+    opacity: 1;
+  }
+}
+
+.deleteBtn {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: $radius-sm;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity $duration-fast,
+    background $duration-fast;
+
+  &:hover {
+    background: $red;
+  }
+
+  // Touch devices have no hover — keep it visible there.
+  @include mobile {
+    opacity: 1;
   }
 }
 
@@ -411,4 +446,88 @@
   color: var(--text-tertiary);
   text-align: right;
   flex-shrink: 0;
+}
+
+// Delete confirmation modal
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-xl;
+  animation: fadeIn $duration-fast $ease-smooth both;
+}
+
+.modal {
+  @include card;
+  width: 100%;
+  max-width: 440px;
+  animation: slideUp $duration-normal $ease-smooth both;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-lg $space-xl;
+  border-bottom: 1px solid var(--subtle-border);
+
+  h3 {
+    font-size: $text-base;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+.modalBody {
+  padding: $space-xl;
+}
+
+.modalText {
+  font-size: $text-sm;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  word-break: break-word;
+
+  strong {
+    color: var(--text-primary);
+  }
+}
+
+.deleteWarning {
+  margin-top: $space-md;
+  font-size: $text-xs;
+  color: $red;
+  font-weight: 500;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-sm;
+  padding: $space-md $space-xl $space-lg;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

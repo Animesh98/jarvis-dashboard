@@ -104,6 +104,37 @@ def play_redirect(item_id: str):
     return RedirectResponse(url=f"{jf_url}/web/#/details?id={item_id}")
 
 
+def _item_size_bytes(item_id: str, user_id: str) -> int:
+    """Best-effort total media file size for an item, in bytes. For a series,
+    sums the sizes of all its episodes."""
+    total = 0
+    item = jellyfin_svc.request(f"/Users/{user_id}/Items/{item_id}?Fields=MediaSources")
+    if not isinstance(item, dict):
+        return 0
+    for ms in item.get("MediaSources") or []:
+        total += ms.get("Size") or 0
+    if item.get("Type") == "Series":
+        eps = jellyfin_svc.request(
+            f"/Users/{user_id}/Items?ParentId={item_id}&Recursive=true&IncludeItemTypes=Episode&Fields=MediaSources"
+        )
+        if isinstance(eps, dict):
+            for ep in eps.get("Items") or []:
+                for ms in ep.get("MediaSources") or []:
+                    total += ms.get("Size") or 0
+    return total
+
+
+@router.delete("-media/item/{item_id}")
+def delete_media_item(item_id: str):
+    """Delete a movie or series (and its files on disk) to free up space."""
+    user_id = _get_user_id()
+    freed = _item_size_bytes(item_id, user_id) if user_id else 0
+    result = jellyfin_svc.delete_item(item_id)
+    if result.get("ok"):
+        result["freed_bytes"] = freed
+    return result
+
+
 @router.get("-media/library-check")
 def library_check(tmdb_id: str = "", title: str = "", media_type: str = "movie"):
     """Check if a movie/series exists in Jellyfin library by TMDB ID or title."""
