@@ -34,6 +34,15 @@ def init_db():
                 added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(tmdb_id, media_type)
             );
+            CREATE TABLE IF NOT EXISTS shares (
+                id TEXT PRIMARY KEY,
+                item_id TEXT NOT NULL,
+                title TEXT NOT NULL DEFAULT '',
+                poster_tag TEXT DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                expires_at INTEGER NOT NULL,
+                revoked INTEGER NOT NULL DEFAULT 0
+            );
         """)
         conn.commit()
         conn.close()
@@ -112,6 +121,59 @@ def watchlist_update_category(tmdb_id: str, media_type: str, category: str) -> d
                 "UPDATE watchlist SET category=? WHERE tmdb_id=? AND media_type=?",
                 (category, tmdb_id, media_type),
             )
+            conn.commit()
+            return {"ok": True}
+        finally:
+            conn.close()
+
+
+# --- Share operations (public movie links served via Tailscale Funnel) ---
+
+
+def share_create(id: str, item_id: str, title: str, poster_tag: str, expires_at: int) -> None:
+    with _lock:
+        conn = _get_conn()
+        try:
+            conn.execute(
+                """INSERT INTO shares (id, item_id, title, poster_tag, expires_at)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (id, item_id, title, poster_tag, expires_at),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def share_get(id: str) -> dict | None:
+    """Return a share row only if it exists and is not revoked. Caller checks expiry."""
+    with _lock:
+        conn = _get_conn()
+        try:
+            row = conn.execute(
+                "SELECT * FROM shares WHERE id=? AND revoked=0",
+                (id,),
+            ).fetchone()
+            return dict(row) if row else None
+        finally:
+            conn.close()
+
+
+def share_list() -> list[dict]:
+    """All non-revoked shares, newest first."""
+    with _lock:
+        conn = _get_conn()
+        try:
+            rows = conn.execute("SELECT * FROM shares WHERE revoked=0 ORDER BY created_at DESC").fetchall()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+
+def share_revoke(id: str) -> dict:
+    with _lock:
+        conn = _get_conn()
+        try:
+            conn.execute("UPDATE shares SET revoked=1 WHERE id=?", (id,))
             conn.commit()
             return {"ok": True}
         finally:

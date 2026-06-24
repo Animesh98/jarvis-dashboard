@@ -38,10 +38,16 @@ _PUBLIC_PATHS = {
 }
 
 # Prefixes that never require the key — read-only image proxies consumed
-# by <img src=...>, which cannot attach headers
+# by <img src=...>, which cannot attach headers, plus the public movie-share
+# surface (each route is independently token-gated in routers/share.py and
+# reachable from the internet via Tailscale Funnel). NOTE: the share *create*,
+# *list* and *revoke* endpoints are NOT here, so they still require the key.
 _PUBLIC_PREFIXES = (
     "/api/tmdb-image/",
     "/api/jellyfin-media/poster",
+    "/w/",
+    "/api/share/hls/",
+    "/api/share/poster/",
 )
 
 

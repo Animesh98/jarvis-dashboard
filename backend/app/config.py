@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     # exchanges it for the API key so new devices never need the raw key.
     dashboard_password: str = ""
 
+    # Public base URL for shareable movie links, served via Tailscale Funnel.
+    # e.g. https://jackal.tail46a969.ts.net:10000  (must point at this backend)
+    # Leave empty to disable the share feature.
+    public_share_base: str = ""
+
     # Comma-separated list of enabled feature modules, or "all" (default).
     # Recognized: system,docker,torrents,media,discover,files,tasks,notes
     # `discover` is always on regardless of this setting.
