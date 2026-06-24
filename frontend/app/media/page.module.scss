@@ -235,16 +235,29 @@
     max-width: 105px;
   }
 
-  &:hover .deleteBtn {
+  &:hover .cardActions {
     opacity: 1;
   }
 }
 
-.deleteBtn {
+.cardActions {
   position: absolute;
   top: 4px;
   left: 4px;
   z-index: 3;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity $duration-fast;
+
+  // Touch devices have no hover — keep actions visible there.
+  @include mobile {
+    opacity: 1;
+  }
+}
+
+.deleteBtn,
+.shareBtn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -255,19 +268,20 @@
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
   cursor: pointer;
-  opacity: 0;
-  transition:
-    opacity $duration-fast,
-    background $duration-fast;
+  transition: background $duration-fast;
+}
 
-  &:hover {
-    background: $red;
-  }
+.deleteBtn:hover {
+  background: $red;
+}
 
-  // Touch devices have no hover — keep it visible there.
-  @include mobile {
-    opacity: 1;
-  }
+.shareBtn:hover {
+  background: $blue;
+}
+
+// Persistently tinted when this title has an active shared link
+.shareBtnActive {
+  background: $blue;
 }
 
 .posterWrap {
@@ -333,6 +347,22 @@
   display: flex;
   align-items: center;
   gap: 2px;
+}
+
+// Always-visible marker that a title currently has a public shared link
+.sharedBadge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: $blue;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .playOverlay {
@@ -510,6 +540,30 @@
   justify-content: flex-end;
   gap: $space-sm;
   padding: $space-md $space-xl $space-lg;
+}
+
+.shareExpiry {
+  display: flex;
+  gap: $space-sm;
+  margin-top: $space-lg;
+}
+
+.shareLinkRow {
+  display: flex;
+  gap: $space-sm;
+  margin-top: $space-md;
+}
+
+.shareLinkInput {
+  flex: 1;
+  min-width: 0;
+  font-family: $font-mono;
+  font-size: $text-xs;
+  padding: $space-sm $space-md;
+  border-radius: $radius-sm;
+  border: 1px solid var(--subtle-border);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
 }
 
 @keyframes fadeIn {

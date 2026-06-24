@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { api, timeAgo, fmtBytes } from '@/lib/api';
+import { api, timeAgo, fmtBytes, copyToClipboard } from '@/lib/api';
 import { toast } from '@/lib/toast';
 import {
   Film,
@@ -22,6 +22,9 @@ import {
   BarChart3,
   Trash2,
   X,
+  Share2,
+  Copy,
+  Check,
 } from 'lucide-react';
 import styles from './page.module.scss';
 
@@ -190,30 +193,52 @@ function PosterCard({
   showProgress,
   subtitle,
   onDelete,
+  onShare,
+  shared,
 }: {
   item: LibItem;
   showProgress?: boolean;
   subtitle?: string;
   onDelete?: (item: LibItem) => void;
+  onShare?: (item: LibItem) => void;
+  shared?: boolean;
 }) {
   const isMovie = item.type === 'Movie';
   const detailHref = item.tmdb_id ? `/discover/${isMovie ? 'movie' : 'tv'}/${item.tmdb_id}` : '#';
 
   return (
     <div className={styles.posterCard}>
-      {onDelete && (
-        <button
-          className={styles.deleteBtn}
-          title={`Delete ${item.name}`}
-          aria-label={`Delete ${item.name}`}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onDelete(item);
-          }}
-        >
-          <Trash2 size={13} />
-        </button>
+      {(onShare || onDelete) && (
+        <div className={styles.cardActions}>
+          {onShare && (
+            <button
+              className={`${styles.shareBtn} ${shared ? styles.shareBtnActive : ''}`}
+              title={shared ? `Manage sharing for ${item.name}` : `Share ${item.name}`}
+              aria-label={shared ? `Manage sharing for ${item.name}` : `Share ${item.name}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onShare(item);
+              }}
+            >
+              <Share2 size={13} />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              className={styles.deleteBtn}
+              title={`Delete ${item.name}`}
+              aria-label={`Delete ${item.name}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete(item);
+              }}
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
+        </div>
       )}
       <Link href={detailHref} className={styles.posterWrap}>
         {item.poster ? (
@@ -238,6 +263,11 @@ function PosterCard({
             <Star size={9} /> {item.rating.toFixed(1)}
           </div>
         )}
+        {shared && (
+          <div className={styles.sharedBadge} title="Shared link active">
+            <Share2 size={10} />
+          </div>
+        )}
       </Link>
       <Link href={detailHref} className={styles.posterTitle}>
         {item.name}
@@ -257,6 +287,93 @@ export default function MediaPage() {
   );
   const [deleteTarget, setDeleteTarget] = useState<LibItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [shareTarget, setShareTarget] = useState<LibItem | null>(null);
+  const [shareHours, setShareHours] = useState(48);
+  const [shareLink, setShareLink] = useState<{
+    url: string;
+    id: string;
+    expires_at: number;
+  } | null>(null);
+  const [creatingShare, setCreatingShare] = useState(false);
+  const [copied, setCopied] = useState(false);
+  // item_id -> active (non-expired) share, so we can show a badge + manage it
+  const [sharedMap, setSharedMap] = useState<
+    Record<string, { id: string; url: string; expires_at: number }>
+  >({});
+
+  async function loadShares() {
+    const r =
+      await api<
+        { id: string; item_id: string; url: string; expires_at: number; expired: boolean }[]
+      >('/api/share/list');
+    if (!r.data) return;
+    const map: Record<string, { id: string; url: string; expires_at: number }> = {};
+    for (const s of r.data) {
+      if (!s.expired) map[s.item_id] = { id: s.id, url: s.url, expires_at: s.expires_at };
+    }
+    setSharedMap(map);
+  }
+
+  function openShare(item: LibItem) {
+    setShareTarget(item);
+    setShareHours(48);
+    setCopied(false);
+    // If already shared, jump straight to the existing link (view/turn-off).
+    const existing = sharedMap[item.id];
+    setShareLink(existing ? { ...existing } : null);
+  }
+
+  async function createShareLink() {
+    if (!shareTarget) return;
+    setCreatingShare(true);
+    const r = await api<{ url: string; id: string; expires_at: number; error?: string }>(
+      '/api/share/create',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_id: shareTarget.id, hours: shareHours }),
+      }
+    );
+    setCreatingShare(false);
+    if (r.error || !r.data?.url) {
+      toast(r.error || 'Could not create link', 'error');
+      return;
+    }
+    const link = { url: r.data.url, id: r.data.id, expires_at: r.data.expires_at };
+    setShareLink(link);
+    setSharedMap((m) => ({ ...m, [shareTarget.id]: link }));
+  }
+
+  async function copyShareLink() {
+    if (!shareLink) return;
+    const ok = await copyToClipboard(shareLink.url);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } else {
+      toast('Copy failed — select the link and copy manually', 'error');
+    }
+  }
+
+  async function revokeShareLink() {
+    if (!shareLink) return;
+    const targetId = shareTarget?.id;
+    await api('/api/share/revoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: shareLink.id }),
+    });
+    toast('Sharing stopped', 'success');
+    if (targetId) {
+      setSharedMap((m) => {
+        const next = { ...m };
+        delete next[targetId];
+        return next;
+      });
+    }
+    setShareTarget(null);
+    setShareLink(null);
+  }
 
   useEffect(() => {
     async function load() {
@@ -265,6 +382,7 @@ export default function MediaPage() {
       if (r.data) setData(r.data);
     }
     load();
+    loadShares();
   }, []);
 
   async function confirmDelete() {
@@ -554,7 +672,13 @@ export default function MediaPage() {
           </div>
           <div className={styles.libraryGrid}>
             {filteredLibrary.map((item, i) => (
-              <PosterCard key={i} item={item} onDelete={setDeleteTarget} />
+              <PosterCard
+                key={i}
+                item={item}
+                onDelete={setDeleteTarget}
+                onShare={openShare}
+                shared={!!sharedMap[item.id]}
+              />
             ))}
           </div>
           {filteredLibrary.length === 0 && (
@@ -630,6 +754,100 @@ export default function MediaPage() {
                   </>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share link modal */}
+      {shareTarget && (
+        <div className={styles.modalOverlay} onClick={() => !creatingShare && setShareTarget(null)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Share “{shareTarget.name}”</h3>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShareTarget(null)}
+                disabled={creatingShare}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              {!shareLink ? (
+                <>
+                  <p className={styles.modalText}>
+                    Create a private link anyone can open to watch this — no app, no login. Pick how
+                    long it stays active.
+                  </p>
+                  <div className={styles.shareExpiry}>
+                    {[
+                      { h: 24, label: '24 hours' },
+                      { h: 48, label: '48 hours' },
+                      { h: 168, label: '7 days' },
+                    ].map((o) => (
+                      <button
+                        key={o.h}
+                        className={`segment-btn ${shareHours === o.h ? 'active' : ''}`}
+                        onClick={() => setShareHours(o.h)}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className={styles.modalText}>
+                    Anyone with this link can watch until{' '}
+                    <strong>{new Date(shareLink.expires_at * 1000).toLocaleString()}</strong>.
+                  </p>
+                  <div className={styles.shareLinkRow}>
+                    <input className={styles.shareLinkInput} readOnly value={shareLink.url} />
+                    <button className="btn btn-primary btn-sm" onClick={copyShareLink}>
+                      {copied ? <Check size={14} /> : <Copy size={14} />}
+                      {copied ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className={styles.modalFooter}>
+              {!shareLink ? (
+                <>
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => setShareTarget(null)}
+                    disabled={creatingShare}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={createShareLink}
+                    disabled={creatingShare}
+                  >
+                    {creatingShare ? (
+                      <>
+                        <Loader2 size={14} className={styles.spinner} /> Creating…
+                      </>
+                    ) : (
+                      <>
+                        <Share2 size={14} /> Create link
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="btn btn-danger btn-sm" onClick={revokeShareLink}>
+                    Turn off link
+                  </button>
+                  <button className="btn btn-ghost" onClick={() => setShareTarget(null)}>
+                    Done
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

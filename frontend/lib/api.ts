@@ -86,3 +86,36 @@ export function colorForPercent(p: number): string {
   if (p < 85) return '#ff9f0a';
   return '#ff453a';
 }
+
+/**
+ * Copy text to the clipboard, working even on plain HTTP (where
+ * navigator.clipboard is unavailable because it's not a secure context).
+ * Falls back to a hidden <textarea> + execCommand('copy').
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // fall through to the legacy path
+    }
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '0';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}

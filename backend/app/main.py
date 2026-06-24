@@ -16,6 +16,7 @@ from app.routers import (
     media,
     notes,
     recommendations,
+    share,
     streaming,
     system,
     tasks,
@@ -101,6 +102,8 @@ if settings.feature_enabled("tasks"):
 if settings.feature_enabled("notes"):
     app.include_router(notes.router)
 app.include_router(watchlist.router)
+if settings.feature_enabled("media"):
+    app.include_router(share.router)
 app.include_router(auth.router)
 app.include_router(_tmdb_img_router)
 
